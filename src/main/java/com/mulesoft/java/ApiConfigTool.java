@@ -43,7 +43,6 @@ public class ApiConfigTool {
 				System.err.println("\n");
 				printHelp();
 			} else if (args[0].equals("configureProjectResourceFile")) {
-				System.err.println("\n");
 				System.err.println(API_VERSION_HEADER_MSG + " Starting " + args[0] + " environment: " + args[6]);
 				LinkedHashMap<String, Object> returnMap = configureApi((args.length > 1) ? args[1] : "userName",
 						(args.length > 2) ? args[2] : "userPass", 
@@ -55,6 +54,7 @@ public class ApiConfigTool {
 						(args.length > 8) ? args[8] : "empty-client-access-list");
 				updateProjectResourceConfigProperties(returnMap);
 				System.err.println(API_VERSION_HEADER_MSG + " Successful completion " + args[0] + " environment: " + args[6]);
+				System.err.println("\n");
 			} else {
 				printHelp();
 			}
