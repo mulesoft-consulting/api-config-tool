@@ -26,7 +26,7 @@ java -jar target/ApiConfigTool.jar configureProjectResourceFile myAnypointUser M
 
 **businessGroupName** is the Anypoint business group Exchange where the API will be registered.
 
-**myApi** is the name of the API that will be registered in Exchange. In order to register the API into many Exchanges, the tool will append "\_ **businessGroupName**" to the name specified here. So after running the registerApi operation for an API named **MyExample** in the business org named **Transportation** , the API in Exchange will be named **MyExample\_Transportation**.
+**myApi** is the name of the API that will be registered in Exchange.
 
 **v1** is the version to use in Exchange. If the version of the API already exists in Exchange, then the existing version will be used.
 
