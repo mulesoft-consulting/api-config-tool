@@ -100,5 +100,5 @@ The registration assumes no SLA's are configured for the API. Here is an example
 
 ### Sample command line run from project's directory:
 ```
-java -jar target/ApiConfigTool.jar configureProjectResourceFile myAnypointUser MyAnypointPassword "businessGroupName" myApi v1 "myEnvironmentName" base my-policies.json my-clients.json
+java -jar target/ApiConfigTool.jar configureProjectResourceFile myAnypointUser MyAnypointPassword "businessGroupName" myApi v1 "myEnvironmentName" my-policies.json my-clients.json
 ```
