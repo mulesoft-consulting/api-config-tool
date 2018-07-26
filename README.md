@@ -10,15 +10,17 @@ The ApiConfigTool can be used in its current form to register APIs, although it 
 
 This document will explain the current tool and how it uses the command line values to perform the registration.
 
-## The registerApi Command
+## The configureProjectResourceFile Command
 
 The ApiConfigTool is a java program that can be executed from a shell java command as follows:
 
-java -jar target/ApiConfigTool.jar **registerApi**** myAnypointUser MyAnypointPassword **"** businessGroupName **"** myApi ****v1**" **myEnvironmentName**" **keyId**** my-policies.json ****my‑clients.json**
+```
+java -jar target/ApiConfigTool.jar configureProjectResourceFile myAnypointUser MyAnypointPassword "businessGroupName" myApi v1 "myEnvironmentName" keyId my-policies.json my‑clients.json
+```
 
-**registerApi** is the operation to execute. The document "Automating API Mgmt" explains all the steps that are performed in more detail. The end result is an API instance that is registered in Anypoint API Manager with a specified set of client applications registered to use the API and a set of policies attached to the API to govern its uses.
+**configureProjectResourceFile** is the operation to execute. This operation configures the API in Anypoint Exchange and creates the API Manager instance for the environment. If the API Exchange or API Manager instance already exists, then the current settings are used.
 
-  **myAnypointUser** is the Anypoint user that will be used to perform all the registration steps. Note that this tool will create any client applications that are listed in the my‑clients.json file. In doing so, the user specified here becomes the owner of record for the application and its client credentials...no other users will be able to see these applications except the master org owner. Using a consistent user name here is important in order to have consistent visibility of the credentials for all automated API registrations.
+**myAnypointUser** is the Anypoint user that will be used to perform all the registration steps. Note that this tool will create any client applications that are listed in the my‑clients.json file. In doing so, the user specified here becomes the owner of record for the application and its client credentials...no other users will be able to see these applications except the master org owner. Using a consistent user name here is important in order to have consistent visibility of the credentials for all automated API registrations.
 
 **MyAnypointPassword** is the password for the user specified above.
 
@@ -100,11 +102,5 @@ The registration assumes no SLA's are configured for the API. Here is an example
 
 ### Sample command line run from project's directory:
 ```
-java -jar target/ApiConfigTool.jar registerApi myAnypointUser MyAnypointPassword "businessGroupName" myApi v1 "myEnvironmentName" base my-policies.json my-clients.json
+java -jar target/ApiConfigTool.jar configureProjectResourceFile myAnypointUser MyAnypointPassword "businessGroupName" myApi v1 "myEnvironmentName" base my-policies.json my-clients.json
 ```
-
-## Encryption Dependency
-
-The encrypt function requires the cps-encryption library, found here:
-
-https://github.com/mulesoft-consulting/cps-encryption
