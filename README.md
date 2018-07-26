@@ -15,7 +15,7 @@ This document will explain the current tool and how it uses the command line val
 The ApiConfigTool is a java program that can be executed from a shell java command as follows:
 
 ```
-java -jar target/ApiConfigTool.jar configureProjectResourceFile myAnypointUser MyAnypointPassword "businessGroupName" myApi v1 "myEnvironmentName" keyId my-policies.json my‑clients.json
+java -jar target/ApiConfigTool.jar configureProjectResourceFile myAnypointUser MyAnypointPassword "businessGroupName" myApi v1 "myEnvironmentName" my-policies.json my‑clients.json
 ```
 
 **configureProjectResourceFile** is the operation to execute. This operation configures the API in Anypoint Exchange and creates the API Manager instance for the environment. If the API Exchange or API Manager instance already exists, then the current settings are used.
@@ -31,8 +31,6 @@ java -jar target/ApiConfigTool.jar configureProjectResourceFile myAnypointUser M
 **v1** is the version to use in Exchange. If the version of the API already exists in Exchange, then the existing version will be used.
 
 **myEnvironmentName** is the environment within the business group that the API instance will be registered into.
-
-**keyId** is the encryption keyId (keystore alias) that should be used for encrypting the configuration properties. This is used in conjunction with the configuration property service to store the API registration properties. The sensitive values (such as client secrets) would be stored as encrypted values.
 
 **my-policies.json** is a file that contains the list of policies that will be applied to the API Instance being registered. See the following section on "Defining Policies" for more information on this file.
 
