@@ -84,7 +84,7 @@ Here is an example of basic authentication with a simple authentication manager:
 
 ### Defining a Client List
 
-This is a file that can be current directory where ApiConfigTool is running, or in the Java classpath. The current directory is searched first.
+The client applications are defined in a file that can be in the current directory where ApiConfigTool is running, or in the Java classpath. The current directory is searched first.
 
 The file is in json format and lists the client applications that should be created (if they don't already exist) and then registered to use the API Instance.
 
