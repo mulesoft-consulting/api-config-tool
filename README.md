@@ -44,7 +44,7 @@ The file name specified here must either be in the current running directory or 
 
 ### Defining Policies
 
-This is a file that can be current directory where ApiConfigTool is running, or in the Java classpath. The current directory is searched first.
+The policies are defined in a file that is named when the ApiConfigTool is executed. The file that can be current directory where ApiConfigTool is running, or in the Java classpath. The current directory is searched first.
 
 The file is in json format and lists the policies that should be applied to the API Instance. There are several examples of policy definitions in the resources directory of the ApiConfigTool:
 
