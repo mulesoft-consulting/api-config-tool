@@ -6,10 +6,13 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Vector;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
@@ -33,7 +36,7 @@ public class ApiConfigTool {
 	public static String HTTPS_ANYPOINT_MULESOFT_COM = "https://anypoint.mulesoft.com";
 	public static boolean makeApiNameBusinessGroupSensitive = false;
 	public static String RESOURCES_DIR = "src/main/resources";
-	public static String API_VERSION_HEADER_MSG = "ApiConfigTool version 1.0";
+	public static String API_VERSION_HEADER_MSG = "ApiConfigTool version 1.0.0";
 
 	public static void main(String[] args) {
 
@@ -65,7 +68,7 @@ public class ApiConfigTool {
 	}
 	
 	private static void updateProjectResourceConfigProperties(LinkedHashMap<String, Object> map) {
-		Properties configProperties = new Properties();
+		Properties configProperties = new SortedProperties();
 		FileInputStream input = null;
 		FileOutputStream output = null;
 		File resourcesDir = new File(RESOURCES_DIR);
@@ -84,23 +87,23 @@ public class ApiConfigTool {
 			StringBuilder filename = new StringBuilder();
 			filename.append(map.get("envName")).append("-config.properties");
 			File file = new File(resourcesDir, filename.toString());
-			input = FileUtils.openInputStream(file);
+			if (file.exists()) {
+				input = FileUtils.openInputStream(file);
 
-			// load a properties file
-			configProperties.load(input);
-/*
- 			System.out.println(configProperties.getProperty("api.name"));
-			System.out.println(configProperties.getProperty("api.version"));
-			System.out.println(configProperties.getProperty("api.id"));
- */
+				// load a properties file
+				configProperties.load(input);
 
-			LinkedHashMap<String,String>generatedProperties = (LinkedHashMap<String, String>) map.get("properties");
-			configProperties.put("api.name", generatedProperties.get("auto-discovery-apiName"));
-			configProperties.put("api.version", generatedProperties.get("auto-discovery-apiVersion"));
-			configProperties.put("api.id", generatedProperties.get("auto-discovery-apiId"));
-			
-			output = FileUtils.openOutputStream(file);
-			configProperties.store(output, null);
+				LinkedHashMap<String, String> generatedProperties = (LinkedHashMap<String, String>) map
+						.get("properties");
+				configProperties.put("api.name", generatedProperties.get("auto-discovery-apiName"));
+				configProperties.put("api.version", generatedProperties.get("auto-discovery-apiVersion"));
+				configProperties.put("api.id", generatedProperties.get("auto-discovery-apiId"));
+
+				output = FileUtils.openOutputStream(file);
+				configProperties.store(output, null);
+			} else {
+				System.err.println("***WARN*** " + file.getAbsolutePath() + " does not exist.");
+			}
 		} catch (IOException ex) {
 			IOUtils.closeQuietly(input);
 			IOUtils.closeQuietly(output);
@@ -939,5 +942,4 @@ public class ApiConfigTool {
 			e.printStackTrace(System.err);
 		}
 	}
-
 }
