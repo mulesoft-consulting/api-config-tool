@@ -304,6 +304,7 @@ public class ApiConfigTool {
 		/*
 		 * Add application contracts
 		 */
+		applications = getApplicationList(client, authorizationHdr, myOrganizationId);
 		createApplicationContracts(client, authorizationHdr, businessGroupId,
 				businessGroupName, businessGroupId, environmentName, environmentId,
 				exchangeAssetId, exchangeAssetVersion, autoDiscoveryApiId, apiVersion, clients,
