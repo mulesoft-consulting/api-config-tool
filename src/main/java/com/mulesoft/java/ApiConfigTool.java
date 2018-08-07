@@ -584,7 +584,7 @@ public class ApiConfigTool {
 			for (LinkedHashMap<String, Object> i : contracts) {
 				int applicationId = 0;
 				StringBuilder applicationName = new StringBuilder();
-				applicationName.append(i.get("applicationName")).append("_").append(businessGroupName).append("_").append(environmentName);
+				applicationName.append(i.get("applicationName"));
 //				System.err.println(applicationName.toString());
 				for (LinkedHashMap<String, Object> e:applications) {
 					if (e.get("name").equals(applicationName.toString())) {
