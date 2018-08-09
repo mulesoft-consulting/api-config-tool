@@ -727,7 +727,6 @@ public class ApiConfigTool {
 		form.field("apiVersion", apiVersion);
 		form.field("classifier", "http");
 		form.field("asset", "undefined");
-		System.err.println("***ERROR*** " + name.toString() + "/" + apiVersion + "/" + assetId.toString());;
 
 		Response response = target.request().accept(MediaType.APPLICATION_JSON)
 				.header("Authorization", authorizationHdr).post(Entity.entity(form, form.getMediaType()));
