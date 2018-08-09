@@ -705,7 +705,7 @@ public class ApiConfigTool {
 			String apiVersion, String organizationName, String organizationId, String groupName, String groupId)
 			throws JsonProcessingException {
 
-		String assetVersion = "1.0.0";
+		String assetVersion = apiVersion;
 		StringBuilder assetId = new StringBuilder();
 		assetId.append(groupId).append("_").append(apiName).append("_").append(assetVersion);
 
@@ -727,6 +727,7 @@ public class ApiConfigTool {
 		form.field("apiVersion", apiVersion);
 		form.field("classifier", "http");
 		form.field("asset", "undefined");
+		System.err.println("***ERROR*** " + name.toString() + "/" + apiVersion + "/" + assetId.toString());;
 
 		Response response = target.request().accept(MediaType.APPLICATION_JSON)
 				.header("Authorization", authorizationHdr).post(Entity.entity(form, form.getMediaType()));
