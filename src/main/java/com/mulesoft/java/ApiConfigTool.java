@@ -244,9 +244,11 @@ public class ApiConfigTool {
 			apiAssets = getExchangeAssets(client, authorizationHdr, businessGroupId, apiName);
 			apiAsset = findApiAsset(apiAssets, myOrganizationName, businessGroupName, apiName, apiVersion);
 		}
+//		System.err.println("apiAsset:" + apiAsset);
 		String exchangeAssetId = (String) apiAsset.get("assetId");
 		String exchangeAssetVersion = (String) apiAsset.get("version");
 		String exchangeAssetName = (String) apiAsset.get("name");
+		String apiType = (String) apiAsset.get("type");
 
 		/*
 		 * Create an API Instance in API Manager
@@ -256,7 +258,7 @@ public class ApiConfigTool {
 				exchangeAssetVersion);
 		if (apiManagerAsset == null) {
 			registerAPIInstance(client, authorizationHdr, businessGroupId, environmentId, exchangeAssetId,
-					exchangeAssetVersion);
+					exchangeAssetVersion, apiType);
 			apiManagerAsset = getApiManagerAsset(client, authorizationHdr, businessGroupId, environmentId, exchangeAssetId,
 					exchangeAssetVersion);
 		}
@@ -797,7 +799,7 @@ public class ApiConfigTool {
 
 	@SuppressWarnings("unchecked")
 	private static void registerAPIInstance(Client restClient, String authorizationHdr, String businessGroupId,
-			String environmentId, String assetId, String assetVersion) throws JsonProcessingException {
+			String environmentId, String assetId, String assetVersion, String apiType) throws JsonProcessingException {
 		HashMap<String, Object> body = new HashMap<String, Object>();
 		LinkedHashMap<String, Object> specValues = new LinkedHashMap<String, Object>();
 		specValues.put("groupId", businessGroupId);
@@ -806,12 +808,18 @@ public class ApiConfigTool {
 		body.put("spec", specValues);
 		body.put("instanceLabel", "auto-api-registation-" + assetId);
 		LinkedHashMap<String, Object> endpointValues = new LinkedHashMap<String, Object>();
-		endpointValues.put("uri", "https://some.implementation.com");
+		endpointValues.put("type", apiType);
+		if (apiType.equalsIgnoreCase("rest-api")) {
+			endpointValues.put("uri", null);
+		} else {
+			endpointValues.put("uri", "https://some.implementation.com");
+		}
 		endpointValues.put("proxyUri", null);
 		endpointValues.put("isCloudHub", false);
 		body.put("endpoint", endpointValues);
 
 		String payload = new ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(body);
+//		System.out.println(payload);
 		WebTarget target = restClient.target(HTTPS_ANYPOINT_MULESOFT_COM).path("apimanager/api/v1/organizations")
 				.path(businessGroupId).path("environments").path(environmentId).path("apis");
 
