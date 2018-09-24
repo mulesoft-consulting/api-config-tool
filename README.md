@@ -12,7 +12,7 @@ This document will explain the current tool and how it uses the command line val
 
 ## The configureProjectResourceFile Command
 
-The ApiConfigTool is a java program that can be executed from a shell java command as follows:
+The ApiConfigTool is a java program. To register a Mule 3 API use this command:
 
 ```
 java -jar target/ApiConfigTool.jar configureProjectResourceFile myAnypointUser MyAnypointPassword "businessGroupName" myApi v1 "myEnvironmentName" my-policies.json my‑clients.json
@@ -40,7 +40,15 @@ The file name specified here must either be in the current running directory or 
 
 The file name specified here must either be in the current running directory or on the Java classpath as a resource file. The default file is distributed in the project as empty‑client‑access‑list which is an empty list resulting in no client applications being registered to use the API Instance.
 
-### Defining Policies
+## The mule4ConfigureProjectResourceFile Command
+
+Similarly, register an API running in Mule 4 with this command:
+
+```
+java -jar target/ApiConfigTool.jar mule4ConfigureProjectResourceFile myAnypointUser MyAnypointPassword "businessGroupName" myApi v1 "myEnvironmentName" my-policies.json my‑clients.json
+```
+
+## Defining Policies
 
 The policies are defined in a file that is named when the ApiConfigTool is executed. The file that can be current directory where ApiConfigTool is running, or in the Java classpath. The current directory is searched first.
 
@@ -52,7 +60,7 @@ The file is in json format and lists the policies that should be applied to the 
 
 To determine more policies, use the "Developer view" of a Chrome browser when adding policies through API Management to determine what properties and names to use. These are not really documented anywhere.
 
-Here is an example of client-credentials-policy:
+Here is an example of client-id-enforcement policy for Mule 3:
 
 ```
 [{
@@ -65,7 +73,7 @@ Here is an example of client-credentials-policy:
 }]
 ```
 
-Here is an example of basic authentication with a simple authentication manager:
+Here is an example of basic authentication with a simple authentication manager for Mule 3:
 
 ```
 [{
@@ -79,8 +87,24 @@ Here is an example of basic authentication with a simple authentication manager:
         "configurationData": {}
 }]
 ```
+Note that policies for Mule 3 runtimes are different from Mule 4 policies. Here is an example of client-id-enforcement policy for Mule 4:
 
-### Defining a Client List
+```
+[	{
+		"configurationData": {
+			"credentialsOriginHasHttpBasicAuthenticationHeader": "customExpression",
+			"clientIdExpression": "#[attributes.headers['client_id']]",
+			"clientSecretExpression": "#[attributes.headers['client_secret']]"
+		},
+		"policyTemplateId": 294,
+		"groupId": "68ef9520-24e9-4cf2-b2f5-620025690913",
+		"assetId": "client-id-enforcement",
+		"assetVersion": "1.1.2"
+	}
+]
+```
+ 
+## Defining a Client List
 
 The client applications are defined in a file that can be in the current directory where ApiConfigTool is running, or in the Java classpath. The current directory is searched first.
 
