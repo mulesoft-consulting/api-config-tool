@@ -850,7 +850,7 @@ public class ApiConfigTool {
 		body.put("endpoint", endpointValues);
 
 		String payload = new ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(body);
-		System.out.println(payload);
+		//System.out.println(payload);
 		WebTarget target = restClient.target(HTTPS_ANYPOINT_MULESOFT_COM).path("apimanager/api/v1/organizations")
 				.path(businessGroupId).path("environments").path(environmentId).path("apis");
 
