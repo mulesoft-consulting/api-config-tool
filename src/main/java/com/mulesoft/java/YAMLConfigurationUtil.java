@@ -3,33 +3,21 @@ package com.mulesoft.java;
 import static java.lang.String.format;
 import static java.lang.String.join;
 
-import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
 import org.apache.commons.io.IOUtils;
-import org.yaml.snakeyaml.DumperOptions;
-import org.yaml.snakeyaml.DumperOptions.FlowStyle;
-import org.yaml.snakeyaml.DumperOptions.ScalarStyle;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.parser.ParserException;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectWriter;
-import com.fasterxml.jackson.dataformat.javaprop.JavaPropsFactory;
 import com.fasterxml.jackson.dataformat.javaprop.JavaPropsMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator.Feature;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 
@@ -112,10 +100,10 @@ public class YAMLConfigurationUtil {
 		}
 	}
 
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	protected void createAttributesFromYamlObject(String parentPath, Object parentYamlObject, Object yamlObject) {
 		if (yamlObject instanceof List) {
-			@SuppressWarnings("rawtypes")
+		
 			List list = (List) yamlObject;
 			if (list.get(0) instanceof Map) {
 				list.forEach(value -> createAttributesFromYamlObject(parentPath, yamlObject, value));
