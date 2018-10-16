@@ -6,13 +6,10 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Properties;
-import java.util.Vector;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
@@ -45,33 +42,29 @@ public class ApiConfigTool {
 				System.err.println(API_VERSION_HEADER_MSG);
 				System.err.println("\n");
 				printHelp();
-			} else if (args[0].equals("configureProjectResourceFile") || args[0].equals("mule3ConfigureProjectResourceFile")) {
+			} else if (args[0].equals("configureProjectResourceFile")
+					|| args[0].equals("mule3ConfigureProjectResourceFile")) {
 				System.err.println(API_VERSION_HEADER_MSG + " Starting " + args[0] + " environment: " + args[6]);
 				LinkedHashMap<String, Object> returnMap = configureApi((args.length > 1) ? args[1] : "userName",
-						(args.length > 2) ? args[2] : "userPass", 
-						(args.length > 3) ? args[3] : "orgName",
-						(args.length > 4) ? args[4] : "apiName", 
-						(args.length > 5) ? args[5] : "apiVersion",
-						(args.length > 6) ? args[6] : "DEV", 
-						(args.length > 7) ? args[7] : "client-credentials-policy",
-						(args.length > 8) ? args[8] : "empty-client-access-list",
-						false);
-				updateProjectResourceConfigProperties(returnMap);
-				System.err.println(API_VERSION_HEADER_MSG + " Successful completion " + args[0] + " environment: " + args[6]);
+						(args.length > 2) ? args[2] : "userPass", (args.length > 3) ? args[3] : "orgName",
+						(args.length > 4) ? args[4] : "apiName", (args.length > 5) ? args[5] : "apiVersion",
+						(args.length > 6) ? args[6] : "DEV", (args.length > 7) ? args[7] : "client-credentials-policy",
+						(args.length > 8) ? args[8] : "empty-client-access-list", false);
+				updateProjectResourceConfigProperties(returnMap, false);
+				System.err.println(
+						API_VERSION_HEADER_MSG + " Successful completion " + args[0] + " environment: " + args[6]);
 				System.err.println("\n");
 			} else if (args[0].equals("mule4ConfigureProjectResourceFile")) {
 				System.err.println(API_VERSION_HEADER_MSG + " Starting " + args[0] + " environment: " + args[6]);
 				LinkedHashMap<String, Object> returnMap = configureApi((args.length > 1) ? args[1] : "userName",
-						(args.length > 2) ? args[2] : "userPass", 
-						(args.length > 3) ? args[3] : "orgName",
-						(args.length > 4) ? args[4] : "apiName", 
-						(args.length > 5) ? args[5] : "apiVersion",
-						(args.length > 6) ? args[6] : "DEV", 
+						(args.length > 2) ? args[2] : "userPass", (args.length > 3) ? args[3] : "orgName",
+						(args.length > 4) ? args[4] : "apiName", (args.length > 5) ? args[5] : "apiVersion",
+						(args.length > 6) ? args[6] : "DEV",
 						(args.length > 7) ? args[7] : "mule4-client-credentials-policy",
-						(args.length > 8) ? args[8] : "empty-client-access-list",
-						true);
-				updateProjectResourceConfigProperties(returnMap);
-				System.err.println(API_VERSION_HEADER_MSG + " Successful completion " + args[0] + " environment: " + args[6]);
+						(args.length > 8) ? args[8] : "empty-client-access-list", true);
+				updateProjectResourceConfigProperties(returnMap, true);
+				System.err.println(
+						API_VERSION_HEADER_MSG + " Successful completion " + args[0] + " environment: " + args[6]);
 				System.err.println("\n");
 			} else {
 				printHelp();
@@ -81,33 +74,36 @@ public class ApiConfigTool {
 			System.exit(500);
 		}
 	}
-	
-	private static void updateProjectResourceConfigProperties(LinkedHashMap<String, Object> map) {
+
+	private static void updateProjectResourceConfigProperties(LinkedHashMap<String, Object> map,
+			boolean isMule4Runtime) {
 		Properties configProperties = new SortedProperties();
 		FileInputStream input = null;
 		FileOutputStream output = null;
 		File resourcesDir = new File(RESOURCES_DIR);
 
-/*
-		ObjectMapper mapperw = new ObjectMapper();
-		String result;
-		try {
-			result = mapperw.writerWithDefaultPrettyPrinter().writeValueAsString(map);
-			System.out.println(result);
-		} catch (JsonProcessingException e) {
-			e.printStackTrace();
-		}		
-*/
+		/*
+		 * ObjectMapper mapperw = new ObjectMapper(); String result; try { result =
+		 * mapperw.writerWithDefaultPrettyPrinter().writeValueAsString(map);
+		 * System.out.println(result); } catch (JsonProcessingException e) {
+		 * e.printStackTrace(); }
+		 */
 		try {
 			StringBuilder filename = new StringBuilder();
 			filename.append(map.get("envName")).append("-config.properties");
 			File file = new File(resourcesDir, filename.toString());
-			if (file.exists()) {
+			StringBuilder yamlFileName = new StringBuilder();
+			yamlFileName.append(map.get("envName")).append("-config.yaml");
+			File yamlFile = new File(resourcesDir, yamlFileName.toString());
+
+			if ((file.exists() && !isMule4Runtime) || (!yamlFile.exists() && file.exists() && isMule4Runtime) ){
+				System.err.println("Reading property file from the location " + file.getAbsolutePath());
 				input = FileUtils.openInputStream(file);
 
 				// load a properties file
 				configProperties.load(input);
 
+				@SuppressWarnings("unchecked")
 				LinkedHashMap<String, String> generatedProperties = (LinkedHashMap<String, String>) map
 						.get("properties");
 				configProperties.put("api.name", generatedProperties.get("auto-discovery-apiName"));
@@ -116,6 +112,21 @@ public class ApiConfigTool {
 
 				output = FileUtils.openOutputStream(file);
 				configProperties.store(output, null);
+				System.err.println("Updated API auto discovery details in the property file : " + file.getAbsolutePath());
+			} else if (yamlFile.exists() && isMule4Runtime) {
+				System.err.println("Reading property file from the location " + yamlFile.getAbsolutePath());
+				String yamlFileLocation = yamlFile.getAbsolutePath();
+				YAMLConfigurationUtil yamlConfUtil = new YAMLConfigurationUtil();
+				LinkedHashMap<String, Object> yamlConfigProperties = (LinkedHashMap<String, Object>) yamlConfUtil
+						.yaml2map(yamlFileLocation);
+				@SuppressWarnings("unchecked")
+				LinkedHashMap<String, String> generatedProperties = (LinkedHashMap<String, String>) map
+						.get("properties");
+				yamlConfigProperties.put("api.name", generatedProperties.get("auto-discovery-apiName"));
+				yamlConfigProperties.put("api.version", generatedProperties.get("auto-discovery-apiVersion"));
+				yamlConfigProperties.put("api.id", generatedProperties.get("auto-discovery-apiId"));
+				yamlConfUtil.map2yaml(yamlConfigProperties, yamlFileLocation);
+				System.err.println("Updated API auto discovery details in the property file : " + yamlFile.getAbsolutePath());
 			} else {
 				System.err.println("***WARN*** " + file.getAbsolutePath() + " does not exist.");
 			}
@@ -133,7 +144,8 @@ public class ApiConfigTool {
 	private static void printHelp() {
 		System.out.println("\nUsage: java -jar ApiConfigTool {operation} [parameters]\n");
 		System.out.println("  operations:");
-		System.out.println("    configureProjectResourceFile   -Read the Api definition and publish it to Anypoint Platform as Mule 3 api,");
+		System.out.println(
+				"    configureProjectResourceFile   -Read the Api definition and publish it to Anypoint Platform as Mule 3 api,");
 		System.out.println("                                    updating src/main/resources/<env>-config.properties");
 		System.out.println("      Parameters:");
 		System.out.println("          userName      -Anypoint user name required");
@@ -143,10 +155,13 @@ public class ApiConfigTool {
 		System.out.println("          apiVersion    -api version required");
 		System.out.println("          env           -environment name required");
 		System.out.println("          policies      -file containing policy definitions (json array) optional");
-		System.out.println("          applications  -file containing client application namess to register for access (json array) optional");
+		System.out.println(
+				"          applications  -file containing client application namess to register for access (json array) optional");
 		System.out.println("\n");
-		System.out.println("    mule4ConfigureProjectResourceFile   -Read the Api definition and publish it to Anypoint Platform as Mule 4 api,");
-		System.out.println("                                         updating src/main/resources/<env>-config.properties");
+		System.out.println(
+				"    mule4ConfigureProjectResourceFile   -Read the Api definition and publish it to Anypoint Platform as Mule 4 api,");
+		System.out.println(
+				"                                         updating src/main/resources/<env>-config.properties");
 		System.out.println("      Parameters:");
 		System.out.println("          userName      -Anypoint user name required");
 		System.out.println("          userPassword  -Anypoint user's password required");
@@ -155,13 +170,15 @@ public class ApiConfigTool {
 		System.out.println("          apiVersion    -api version required");
 		System.out.println("          env           -environment name required");
 		System.out.println("          policies      -file containing policy definitions (json array) optional");
-		System.out.println("          applications  -file containing client application namess to register for access (json array) optional");
+		System.out.println(
+				"          applications  -file containing client application namess to register for access (json array) optional");
 		System.out.println("\n");
 	}
 
 	@SuppressWarnings("unchecked")
-	private static LinkedHashMap<String, Object> configureApi(String userName, String userPass, String businessGroupName, String apiName,
-			String apiVersion, String environmentName, String policies, String clients, boolean mule4OrAbove) throws Exception {
+	private static LinkedHashMap<String, Object> configureApi(String userName, String userPass,
+			String businessGroupName, String apiName, String apiVersion, String environmentName, String policies,
+			String clients, boolean mule4OrAbove) throws Exception {
 
 		LinkedHashMap<String, Object> returnPayload = new LinkedHashMap<String, Object>();
 		LinkedHashMap<String, String> returnPayloadProperties = new LinkedHashMap<String, String>();
@@ -205,57 +222,7 @@ public class ApiConfigTool {
 				environmentName);
 		String environmentId = (String) environment.get("id");
 		ArrayList<LinkedHashMap<String, Object>> applications = null;
-		LinkedHashMap<String, Object> applicationInfo = null;
 
-		/*
-		 * Create default CPS credential if it doesn't already exist
-		 */
-/*
-		String cps_client_name = null;
-		String cps_client_id = null;
-		String cps_client_secret = null;
-		StringBuilder cpsName = new StringBuilder();
-		cpsName.append("configuration-property-service").append("_").append(businessGroupName).append("_")
-				.append(environmentName);
-		createApplication(client, authorizationHdr, myOrganizationId, cpsName.toString(),
-				"Use for interacting with configuration property service");
-		applications = getApplicationList(client, authorizationHdr, myOrganizationId);
-		for (LinkedHashMap<String, Object> e:applications) {
-			if (e.get("name").equals(cpsName.toString())) {
-				applicationInfo = getApplicationInformation(client, authorizationHdr, myOrganizationId, (int) e.get("id"));
-				cps_client_name = (String) applicationInfo.get("name");
-				cps_client_id = (String) applicationInfo.get("clientId");
-				cps_client_secret = (String) applicationInfo.get("clientSecret");
-				break;
-			}
-		}
-*/
-		
-		/*
-		 * Create auto-registration credential if it doesn't already exist
-		 */
-/*
-		String auto_reg_client_name = null;
-		String auto_reg_client_id = null;
-		String auto_reg_client_secret = null;
-		StringBuilder autoRegistrationName = new StringBuilder();
-		autoRegistrationName.append("auto-api-registration").append("_").append(businessGroupName).append("_")
-				.append(environmentName);
-		createApplication(client, authorizationHdr, myOrganizationId, autoRegistrationName.toString(),
-				"Use for interacting with Auto Registration");
-		applications = getApplicationList(client, authorizationHdr, myOrganizationId);
-		applicationInfo = null;
-		for (LinkedHashMap<String, Object> e:applications) {
-			if (e.get("name").equals(autoRegistrationName.toString())) {
-				applicationInfo = getApplicationInformation(client, authorizationHdr, myOrganizationId, (int) e.get("id"));
-				auto_reg_client_name = (String) applicationInfo.get("name");
-				auto_reg_client_id = (String) applicationInfo.get("clientId");
-				auto_reg_client_secret = (String) applicationInfo.get("clientSecret");
-				break;
-			}
-		}
-*/
-		
 		/*
 		 * Create the API in Exchange
 		 */
@@ -286,14 +253,14 @@ public class ApiConfigTool {
 		if (apiManagerAsset == null) {
 			registerAPIInstance(client, authorizationHdr, businessGroupId, environmentId, exchangeAssetId,
 					exchangeAssetVersion, apiType, mule4OrAbove);
-			apiManagerAsset = getApiManagerAsset(client, authorizationHdr, businessGroupId, environmentId, exchangeAssetId,
-					exchangeAssetVersion);
+			apiManagerAsset = getApiManagerAsset(client, authorizationHdr, businessGroupId, environmentId,
+					exchangeAssetId, exchangeAssetVersion);
 		}
 		String apiManagerAssetId = apiManagerAsset.get("id").toString();
 		String autoDiscoveryApiName = (String) apiManagerAsset.get("autodiscoveryApiName");
 		String autoDiscoveryApiVersion = null;
 		String autoDiscoveryApiId = null;
-		for (LinkedHashMap<String, Object> e:(ArrayList<LinkedHashMap<String, Object>>) apiManagerAsset.get("apis")) {
+		for (LinkedHashMap<String, Object> e : (ArrayList<LinkedHashMap<String, Object>>) apiManagerAsset.get("apis")) {
 			if (e.get("instanceLabel").equals("auto-api-registation-" + exchangeAssetId)) {
 				autoDiscoveryApiVersion = (String) e.get("autodiscoveryInstanceName");
 				autoDiscoveryApiId = e.get("id").toString();
@@ -301,35 +268,14 @@ public class ApiConfigTool {
 			}
 		}
 
-		/*
-		 * Create the application information
-		 */
-/*
-		String generated_client_name = null;
-		String generated_client_id = null;
-		String generated_client_secret = null;
-		StringBuilder applicationName = new StringBuilder();
-		applicationName.append(exchangeAssetName).append("_").append(environmentName);
-		createApplication(client, authorizationHdr, myOrganizationId, applicationName.toString(), null);
-		applications = getApplicationList(client, authorizationHdr, myOrganizationId);
-		applicationInfo = null;
-		for (LinkedHashMap<String, Object> e:applications) {
-			if (e.get("name").equals(applicationName.toString())) {
-				applicationInfo = getApplicationInformation(client, authorizationHdr, myOrganizationId, (int) e.get("id"));
-				generated_client_name = (String) applicationInfo.get("name");
-				generated_client_id = (String) applicationInfo.get("clientId");
-				generated_client_secret = (String) applicationInfo.get("clientSecret");
-				break;
-			}
-		}
-*/
-
 		try {
 			/*
 			 * Add API Policies
 			 */
-			addApiPolicies(client, authorizationHdr, businessGroupId, environmentId, autoDiscoveryApiId, policies, mule4OrAbove);
-			//don't need: getApiPolicies(client, authorizationHdr, businessGroupId, environmentId, autoDiscoveryApiId);
+			addApiPolicies(client, authorizationHdr, businessGroupId, environmentId, autoDiscoveryApiId, policies,
+					mule4OrAbove);
+			// don't need: getApiPolicies(client, authorizationHdr, businessGroupId,
+			// environmentId, autoDiscoveryApiId);
 
 			/*
 			 * Add application contracts
@@ -341,11 +287,12 @@ public class ApiConfigTool {
 		} catch (Exception e) {
 			e.printStackTrace(System.err);
 		}
-		
+
 		// save configuration
 		ArrayList<Object> empty = new ArrayList<Object>();
 		returnPayload.put("imports", empty.toArray());
-		returnPayloadProperties.put("secure.properties", "generated_client_secret,cps_client_secret,auto_api_registration_client_secret");
+		returnPayloadProperties.put("secure.properties",
+				"generated_client_secret,cps_client_secret,auto_api_registration_client_secret");
 		returnPayloadProperties.put("apiName", apiName);
 		returnPayloadProperties.put("apiManagerAssetId", apiManagerAssetId);
 		returnPayloadProperties.put("apiVersion", apiVersion);
@@ -359,16 +306,20 @@ public class ApiConfigTool {
 		returnPayloadProperties.put("auto-discovery-apiName", autoDiscoveryApiName);
 		returnPayloadProperties.put("auto-discovery-apiVersion", autoDiscoveryApiVersion);
 		/*
-		returnPayloadProperties.put("generated_client_name", generated_client_name);
-		returnPayloadProperties.put("generated_client_id", generated_client_id);
-		returnPayloadProperties.put("generated_client_secret", generated_client_secret);
-		returnPayloadProperties.put("cps_client_name", cps_client_name);
-		returnPayloadProperties.put("cps_client_id", cps_client_id);
-		returnPayloadProperties.put("cps_client_secret", cps_client_secret);
-		returnPayloadProperties.put("auto_api_registration_client_name", auto_reg_client_name);
-		returnPayloadProperties.put("auto_api_registration_client_id", auto_reg_client_id);
-		returnPayloadProperties.put("auto_api_registration_client_secret", auto_reg_client_secret);
-*/
+		 * returnPayloadProperties.put("generated_client_name", generated_client_name);
+		 * returnPayloadProperties.put("generated_client_id", generated_client_id);
+		 * returnPayloadProperties.put("generated_client_secret",
+		 * generated_client_secret); returnPayloadProperties.put("cps_client_name",
+		 * cps_client_name); returnPayloadProperties.put("cps_client_id",
+		 * cps_client_id); returnPayloadProperties.put("cps_client_secret",
+		 * cps_client_secret);
+		 * returnPayloadProperties.put("auto_api_registration_client_name",
+		 * auto_reg_client_name);
+		 * returnPayloadProperties.put("auto_api_registration_client_id",
+		 * auto_reg_client_id);
+		 * returnPayloadProperties.put("auto_api_registration_client_secret",
+		 * auto_reg_client_secret);
+		 */
 		returnPayload.put("properties", returnPayloadProperties);
 
 		return returnPayload;
@@ -495,8 +446,8 @@ public class ApiConfigTool {
 	}
 
 	@SuppressWarnings("unchecked")
-	private static ArrayList<LinkedHashMap<String, Object>> getApplicationList(Client restClient, String authorizationHdr,
-			String organizationId) throws JsonProcessingException {
+	private static ArrayList<LinkedHashMap<String, Object>> getApplicationList(Client restClient,
+			String authorizationHdr, String organizationId) throws JsonProcessingException {
 		WebTarget target = restClient.target(HTTPS_ANYPOINT_MULESOFT_COM).path("exchange/api/v1/organizations")
 				.path(organizationId).path("applications");
 
@@ -525,7 +476,7 @@ public class ApiConfigTool {
 		}
 	}
 
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({ "unchecked", "unused" })
 	private static LinkedHashMap<String, Object> getApplicationInformation(Client restClient, String authorizationHdr,
 			String organizationId, int applicationId) throws JsonProcessingException {
 		WebTarget target = restClient.target(HTTPS_ANYPOINT_MULESOFT_COM).path("exchange/api/v1/organizations")
@@ -535,7 +486,7 @@ public class ApiConfigTool {
 				.accept(MediaType.APPLICATION_JSON).get();
 
 		int statuscode = 500;
-		LinkedHashMap<String,Object> result = null;
+		LinkedHashMap<String, Object> result = null;
 		if (response != null) {
 			statuscode = response.getStatus();
 		}
@@ -556,8 +507,9 @@ public class ApiConfigTool {
 		}
 	}
 
-	private static void createApplication(Client restClient, String authorizationHdr,
-			String organizationId, String applicationName, String description) throws JsonProcessingException {
+	@SuppressWarnings("unused")
+	private static void createApplication(Client restClient, String authorizationHdr, String organizationId,
+			String applicationName, String description) throws JsonProcessingException {
 		String desc = (description == null)
 				? "Auto generated client credentials for this API instance to use calling other dependencies."
 				: description;
@@ -589,8 +541,9 @@ public class ApiConfigTool {
 
 	private static void createApplicationContracts(Client restClient, String authorizationHdr, String organizationId,
 			String businessGroupName, String businessGroupId, String environmentName, String environmentId,
-			String exchangeAssetId, String exchangeAssetVersion, String autoDiscoveryApiId, String apiVersion, String contractsFileName,
-			ArrayList<LinkedHashMap<String, Object>> applications) throws JsonProcessingException {
+			String exchangeAssetId, String exchangeAssetVersion, String autoDiscoveryApiId, String apiVersion,
+			String contractsFileName, ArrayList<LinkedHashMap<String, Object>> applications)
+			throws JsonProcessingException {
 
 		ArrayList<LinkedHashMap<String, Object>> contracts;
 		ObjectMapper mapper;
@@ -619,7 +572,7 @@ public class ApiConfigTool {
 				StringBuilder applicationName = new StringBuilder();
 				applicationName.append(i.get("applicationName"));
 //				System.err.println(applicationName.toString());
-				for (LinkedHashMap<String, Object> e:applications) {
+				for (LinkedHashMap<String, Object> e : applications) {
 					if (e.get("name").equals(applicationName.toString())) {
 						applicationId = (int) e.get("id");
 						break;
@@ -627,7 +580,8 @@ public class ApiConfigTool {
 				}
 				if (applicationId != 0) {
 					createApplicationContract(restClient, authorizationHdr, organizationId, applicationId,
-							businessGroupId, environmentId, exchangeAssetId, exchangeAssetVersion, autoDiscoveryApiId, apiVersion);
+							businessGroupId, environmentId, exchangeAssetId, exchangeAssetVersion, autoDiscoveryApiId,
+							apiVersion);
 				} else {
 					System.err.println("Could not find application in list: " + applicationName);
 				}
@@ -637,14 +591,15 @@ public class ApiConfigTool {
 			System.err.println("Cannot use contracts file " + contractsFileName);
 			e.printStackTrace(System.err);
 		} finally {
-			if (is != null) IOUtils.closeQuietly(is);
+			if (is != null)
+				IOUtils.closeQuietly(is);
 		}
 
 	}
 
-	private static void createApplicationContract(Client restClient, String authorizationHdr,
-			String organizationId, int applicationId, String businessGroupId,
-			String environmentId, String exchangeAssetId, String exchangeAssetVersion, String autoDiscoveryApiId, String apiVersion) throws JsonProcessingException {
+	private static void createApplicationContract(Client restClient, String authorizationHdr, String organizationId,
+			int applicationId, String businessGroupId, String environmentId, String exchangeAssetId,
+			String exchangeAssetVersion, String autoDiscoveryApiId, String apiVersion) throws JsonProcessingException {
 		LinkedHashMap<String, Object> contractValues = new LinkedHashMap<String, Object>();
 		contractValues.put("apiId", autoDiscoveryApiId);
 		contractValues.put("environmentId", environmentId);
@@ -655,7 +610,7 @@ public class ApiConfigTool {
 		contractValues.put("version", exchangeAssetVersion);
 		contractValues.put("productAPIVersion", apiVersion);
 		String payload = new ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(contractValues);
-		
+
 		WebTarget target = restClient.target(HTTPS_ANYPOINT_MULESOFT_COM).path("exchange/api/v1/organizations")
 				.path(organizationId).path("applications").path(Integer.toString(applicationId)).path("contracts");
 
@@ -806,7 +761,8 @@ public class ApiConfigTool {
 			statuscode = response.getStatus();
 		}
 		if (response != null && response.getStatus() == 200) {
-			LinkedHashMap<String, Object> apis = (LinkedHashMap<String, Object>) response.readEntity(LinkedHashMap.class);
+			LinkedHashMap<String, Object> apis = (LinkedHashMap<String, Object>) response
+					.readEntity(LinkedHashMap.class);
 			apiManagerAssets = (ArrayList<LinkedHashMap<String, Object>>) apis.get("assets");
 			if (apiManagerAssets != null && !apiManagerAssets.isEmpty()) {
 				result = apiManagerAssets.get(0);
@@ -829,7 +785,8 @@ public class ApiConfigTool {
 
 	@SuppressWarnings("unchecked")
 	private static void registerAPIInstance(Client restClient, String authorizationHdr, String businessGroupId,
-			String environmentId, String assetId, String assetVersion, String apiType, boolean mule4OrAbove) throws JsonProcessingException {
+			String environmentId, String assetId, String assetVersion, String apiType, boolean mule4OrAbove)
+			throws JsonProcessingException {
 		HashMap<String, Object> body = new HashMap<String, Object>();
 		LinkedHashMap<String, Object> specValues = new LinkedHashMap<String, Object>();
 		specValues.put("groupId", businessGroupId);
@@ -850,7 +807,7 @@ public class ApiConfigTool {
 		body.put("endpoint", endpointValues);
 
 		String payload = new ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(body);
-		//System.out.println(payload);
+		// System.out.println(payload);
 		WebTarget target = restClient.target(HTTPS_ANYPOINT_MULESOFT_COM).path("apimanager/api/v1/organizations")
 				.path(businessGroupId).path("environments").path(environmentId).path("apis");
 
@@ -879,7 +836,7 @@ public class ApiConfigTool {
 		}
 	}
 
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({ "unchecked", "unused" })
 	private static ArrayList<LinkedHashMap<String, Object>> getApiPolicies(Client restClient, String authorizationHdr,
 			String businessGroupId, String environmentId, String apiInstanceId) throws JsonProcessingException {
 		WebTarget target = restClient.target(HTTPS_ANYPOINT_MULESOFT_COM).path("apimanager/api/v1/organizations")
@@ -941,7 +898,8 @@ public class ApiConfigTool {
 			policies = mapper.readValue(policiesStr, type);
 
 			for (LinkedHashMap<String, Object> i : policies) {
-				addApiPolicy(restClient, authorizationHdr, businessGroupId, environmentId, apiInstanceId, i, mule4OrAbove);
+				addApiPolicy(restClient, authorizationHdr, businessGroupId, environmentId, apiInstanceId, i,
+						mule4OrAbove);
 			}
 
 		} catch (Exception e) {
@@ -949,7 +907,8 @@ public class ApiConfigTool {
 			e.printStackTrace(System.err);
 			System.exit(1);
 		} finally {
-			if (is != null) IOUtils.closeQuietly(is);
+			if (is != null)
+				IOUtils.closeQuietly(is);
 		}
 
 	}
@@ -964,7 +923,7 @@ public class ApiConfigTool {
 		if (mule4OrAbove) {
 			newPolicy.put("apiVersionId", apiInstanceId);
 		}
-		
+
 		try {
 			ObjectMapper mapperw = new ObjectMapper();
 			policyStr = mapperw.writeValueAsString(newPolicy);
