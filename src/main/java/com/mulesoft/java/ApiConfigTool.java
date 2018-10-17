@@ -33,7 +33,7 @@ public class ApiConfigTool {
 	public static String HTTPS_ANYPOINT_MULESOFT_COM = "https://anypoint.mulesoft.com";
 	public static boolean makeApiNameBusinessGroupSensitive = false;
 	public static String RESOURCES_DIR = "src/main/resources";
-	public static String API_VERSION_HEADER_MSG = "ApiConfigTool version 1.0.0";
+	public static String API_VERSION_HEADER_MSG = "ApiConfigTool version 1.0.3";
 
 	public static void main(String[] args) {
 
@@ -85,7 +85,7 @@ public class ApiConfigTool {
 		/*
 		 * ObjectMapper mapperw = new ObjectMapper(); String result; try { result =
 		 * mapperw.writerWithDefaultPrettyPrinter().writeValueAsString(map);
-		 * System.out.println(result); } catch (JsonProcessingException e) {
+		 * System.err.println(result); } catch (JsonProcessingException e) {
 		 * e.printStackTrace(); }
 		 */
 		try {
@@ -142,37 +142,37 @@ public class ApiConfigTool {
 	}
 
 	private static void printHelp() {
-		System.out.println("\nUsage: java -jar ApiConfigTool {operation} [parameters]\n");
-		System.out.println("  operations:");
-		System.out.println(
+		System.err.println("Usage: java -jar ApiConfigTool {operation} [parameters]\n");
+		System.err.println("  operations:");
+		System.err.println(
 				"    configureProjectResourceFile   -Read the Api definition and publish it to Anypoint Platform as Mule 3 api,");
-		System.out.println("                                    updating src/main/resources/<env>-config.properties");
-		System.out.println("      Parameters:");
-		System.out.println("          userName      -Anypoint user name required");
-		System.out.println("          userPassword  -Anypoint user's password required");
-		System.out.println("          orgName       -Anypoint business org name (no hierarchy) required");
-		System.out.println("          apiName       -api name required");
-		System.out.println("          apiVersion    -api version required");
-		System.out.println("          env           -environment name required");
-		System.out.println("          policies      -file containing policy definitions (json array) optional");
-		System.out.println(
+		System.err.println("                                    updating src/main/resources/<env>-config.properties");
+		System.err.println("      Parameters:");
+		System.err.println("          userName      -Anypoint user name required");
+		System.err.println("          userPassword  -Anypoint user's password required");
+		System.err.println("          orgName       -Anypoint business org name (no hierarchy) required");
+		System.err.println("          apiName       -api name required");
+		System.err.println("          apiVersion    -api version required");
+		System.err.println("          env           -environment name required");
+		System.err.println("          policies      -file containing policy definitions (json array) optional");
+		System.err.println(
 				"          applications  -file containing client application namess to register for access (json array) optional");
-		System.out.println("\n");
-		System.out.println(
+		System.err.println("\n");
+		System.err.println(
 				"    mule4ConfigureProjectResourceFile   -Read the Api definition and publish it to Anypoint Platform as Mule 4 api,");
-		System.out.println(
+		System.err.println(
 				"                                         updating src/main/resources/<env>-config.properties");
-		System.out.println("      Parameters:");
-		System.out.println("          userName      -Anypoint user name required");
-		System.out.println("          userPassword  -Anypoint user's password required");
-		System.out.println("          orgName       -Anypoint business org name (no hierarchy) required");
-		System.out.println("          apiName       -api name required");
-		System.out.println("          apiVersion    -api version required");
-		System.out.println("          env           -environment name required");
-		System.out.println("          policies      -file containing policy definitions (json array) optional");
-		System.out.println(
+		System.err.println("      Parameters:");
+		System.err.println("          userName      -Anypoint user name required");
+		System.err.println("          userPassword  -Anypoint user's password required");
+		System.err.println("          orgName       -Anypoint business org name (no hierarchy) required");
+		System.err.println("          apiName       -api name required");
+		System.err.println("          apiVersion    -api version required");
+		System.err.println("          env           -environment name required");
+		System.err.println("          policies      -file containing policy definitions (json array) optional");
+		System.err.println(
 				"          applications  -file containing client application namess to register for access (json array) optional");
-		System.out.println("\n");
+		System.err.println("\n");
 	}
 
 	@SuppressWarnings("unchecked")
@@ -327,6 +327,11 @@ public class ApiConfigTool {
 
 	@SuppressWarnings("unchecked")
 	private static String getAPToken(Client restClient, String user, String password) throws JsonProcessingException {
+		
+		if (user.equalsIgnoreCase("~~~Token~~~")) {
+			return password;
+		}
+		
 		String token = null;
 		LinkedHashMap<String, Object> loginValues = new LinkedHashMap<String, Object>();
 		loginValues.put("username", user);
@@ -807,7 +812,7 @@ public class ApiConfigTool {
 		body.put("endpoint", endpointValues);
 
 		String payload = new ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(body);
-		// System.out.println(payload);
+		// System.err.println(payload);
 		WebTarget target = restClient.target(HTTPS_ANYPOINT_MULESOFT_COM).path("apimanager/api/v1/organizations")
 				.path(businessGroupId).path("environments").path(environmentId).path("apis");
 

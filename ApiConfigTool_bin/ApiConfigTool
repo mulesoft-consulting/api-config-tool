@@ -1,0 +1,3 @@
+export APICONFIGTOOL_HOME=/Applications/ApiConfigTool
+
+java -jar $APICONFIGTOOL_HOME/ApiConfigTool.jar "$@"
