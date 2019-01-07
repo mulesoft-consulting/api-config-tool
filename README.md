@@ -6,7 +6,31 @@ Java app that uses the Exchange, API Manager 2.0 and Access Manager APIs to perf
 
 The ApiConfigTool was created primarily to provide a coding example for how to use the various Anypoint Platform APIs to automate the API registration for deploying an API within a Maven script. Note that the ApiConfigTool will re-use pieces that have already been configured, for instance, if the API is already defined in Exchange, it will use that entry and continue running the rest of the steps.
 
-The ApiConfigTool can be used in its current form to register APIs, although it makes many assumptions about naming conventions and expected usage of the API that may not fit with a specific set of customer requirements.
+The ApiConfigTool can be used in its current form to register APIs, although it makes many assumptions about naming conventions and expected usage of the API that may not fit with a specific set of customer requirements. When finished running, the specified API will be created in Exchange and an instance for the specified environment will be created in API Manager. In addition to the API instance, a client application will be registered for the API which is intended to be used for inter-API governance.
+
+The API manager autodiscovery values will be stored in the src/main/resources directory in the environment's -config.properties (or -config.yaml) depending upon which file exists in the directory. This results in an environment specific configuration file that can be used to identify the API Manager defined characteristics of the API. Here is a sample of an DEV-config.properties file contents:
+
+```
+#Mon Jan 07 13:18:22 PST 2019
+api.id=15607288
+api.name=groupId\:50228d0d-2c1f-4548-9c8a-90c0ebb480b9\:assetId\:50228d0d-2c1f-4548-9c8a-90c0ebb480b9_pdd-exp_1.0.0
+api.version=1.0.0\:15607288
+my.client_id=da183b8d12cf4c06814a81a5574e95bb
+my.client_name=PDD-EXP_SANDBOX
+my.client_secret=39e75F05e151453C86dAFd1EB8dC14BB
+```
+Here is an example of a yaml file:
+
+```
+api:
+  id: "15607289"
+  name: "groupId:50228d0d-2c1f-4548-9c8a-90c0ebb480b9:assetId:50228d0d-2c1f-4548-9c8a-90c0ebb480b9_pdd-exp_1.0.0"
+  version: "1.0.0:15607289"
+my:
+  client_name: "PDD-EXP_SANDBOX"
+  client_id: "da183b8d12cf4c06814a81a5574e95bb"
+  client_secret: "39e75F05e151453C86dAFd1EB8dC14BB"
+```
 
 This document will explain the current tool and how it uses the command line values to perform the registration.
 
@@ -126,3 +150,8 @@ The registration assumes no SLA's are configured for the API. Here is an example
 ```
 java -jar target/ApiConfigTool.jar configureProjectResourceFile myAnypointUser MyAnypointPassword "businessGroupName" myApi v1 "myEnvironmentName" my-policies.json my-clients.json
 ```
+## Revisions
+|version|who|description|
+| --- | --- | --- |
+|1.0.4|pdd|Jackson databind security release fix. Add my.client_ variables to environment configuration file (DEV-config.properties for instance).|	
+	

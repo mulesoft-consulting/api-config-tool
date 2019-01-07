@@ -33,7 +33,7 @@ public class ApiConfigTool {
 	public static String HTTPS_ANYPOINT_MULESOFT_COM = "https://anypoint.mulesoft.com";
 	public static boolean makeApiNameBusinessGroupSensitive = false;
 	public static String RESOURCES_DIR = "src/main/resources";
-	public static String API_VERSION_HEADER_MSG = "ApiConfigTool version 1.0.3";
+	public static String API_VERSION_HEADER_MSG = "ApiConfigTool version 1.0.4";
 
 	public static void main(String[] args) {
 
@@ -109,6 +109,9 @@ public class ApiConfigTool {
 				configProperties.put("api.name", generatedProperties.get("auto-discovery-apiName"));
 				configProperties.put("api.version", generatedProperties.get("auto-discovery-apiVersion"));
 				configProperties.put("api.id", generatedProperties.get("auto-discovery-apiId"));
+				configProperties.put("my.client_id", (generatedProperties.get("my.client_id") != null)?generatedProperties.get("my.client_id"):"");
+				configProperties.put("my.client_secret", (generatedProperties.get("my.client_secret") != null)?generatedProperties.get("my.client_secret"):"");
+				configProperties.put("my.client_name", (generatedProperties.get("my.client_name") != null)?generatedProperties.get("my.client_name"):"");
 
 				output = FileUtils.openOutputStream(file);
 				configProperties.store(output, null);
@@ -125,6 +128,9 @@ public class ApiConfigTool {
 				yamlConfigProperties.put("api.name", generatedProperties.get("auto-discovery-apiName"));
 				yamlConfigProperties.put("api.version", generatedProperties.get("auto-discovery-apiVersion"));
 				yamlConfigProperties.put("api.id", generatedProperties.get("auto-discovery-apiId"));
+				yamlConfigProperties.put("my.client_id", (generatedProperties.get("my.client_id") != null)?generatedProperties.get("my.client_id"):"");
+				yamlConfigProperties.put("my.client_secret", (generatedProperties.get("my.client_secret") != null)?generatedProperties.get("my.client_secret"):"");
+				yamlConfigProperties.put("my.client_name", (generatedProperties.get("my.client_name") != null)?generatedProperties.get("my.client_name"):"");
 				yamlConfUtil.map2yaml(yamlConfigProperties, yamlFileLocation);
 				System.err.println("Updated API auto discovery details in the property file : " + yamlFile.getAbsolutePath());
 			} else {
@@ -268,6 +274,27 @@ public class ApiConfigTool {
 			}
 		}
 
+		/*
+		 * Create the my.client application information
+		 */
+		String generated_client_name = null;
+		String generated_client_id = null;
+		String generated_client_secret = null;
+		StringBuilder applicationName = new StringBuilder();
+		applicationName.append(exchangeAssetName.toUpperCase()).append("_").append(environmentName.toUpperCase());
+		createApplication(client, authorizationHdr, myOrganizationId, applicationName.toString(), null);
+		applications = getApplicationList(client, authorizationHdr, myOrganizationId, environmentId);
+		LinkedHashMap<String, Object> applicationInfo = null;
+		for (LinkedHashMap<String, Object> e:applications) {
+			if (e.get("name").equals(applicationName.toString())) {
+				applicationInfo = getApplicationInformation(client, authorizationHdr, myOrganizationId, (int) e.get("id"));
+				generated_client_name = (String) applicationInfo.get("name");
+				generated_client_id = (String) applicationInfo.get("clientId");
+				generated_client_secret = (String) applicationInfo.get("clientSecret");
+				break;
+			}
+		}
+
 		try {
 			/*
 			 * Add API Policies
@@ -280,7 +307,7 @@ public class ApiConfigTool {
 			/*
 			 * Add application contracts
 			 */
-			applications = getApplicationList(client, authorizationHdr, myOrganizationId);
+			applications = getApplicationList(client, authorizationHdr, myOrganizationId, environmentId);
 			createApplicationContracts(client, authorizationHdr, businessGroupId, businessGroupName, businessGroupId,
 					environmentName, environmentId, exchangeAssetId, exchangeAssetVersion, autoDiscoveryApiId,
 					apiVersion, clients, applications);
@@ -305,11 +332,12 @@ public class ApiConfigTool {
 		returnPayloadProperties.put("auto-discovery-apiId", autoDiscoveryApiId);
 		returnPayloadProperties.put("auto-discovery-apiName", autoDiscoveryApiName);
 		returnPayloadProperties.put("auto-discovery-apiVersion", autoDiscoveryApiVersion);
+		returnPayloadProperties.put("my.client_name", generated_client_name);
+		returnPayloadProperties.put("my.client_id", generated_client_id);
+		returnPayloadProperties.put("my.client_secret", generated_client_secret);
+		
 		/*
-		 * returnPayloadProperties.put("generated_client_name", generated_client_name);
-		 * returnPayloadProperties.put("generated_client_id", generated_client_id);
-		 * returnPayloadProperties.put("generated_client_secret",
-		 * generated_client_secret); returnPayloadProperties.put("cps_client_name",
+		 * returnPayloadProperties.put("cps_client_name",
 		 * cps_client_name); returnPayloadProperties.put("cps_client_id",
 		 * cps_client_id); returnPayloadProperties.put("cps_client_secret",
 		 * cps_client_secret);
@@ -452,10 +480,13 @@ public class ApiConfigTool {
 
 	@SuppressWarnings("unchecked")
 	private static ArrayList<LinkedHashMap<String, Object>> getApplicationList(Client restClient,
-			String authorizationHdr, String organizationId) throws JsonProcessingException {
+			String authorizationHdr, String organizationId, String environmentId) throws JsonProcessingException {
+//		WebTarget target = restClient.target(HTTPS_ANYPOINT_MULESOFT_COM).path("exchange/api/v1/organizations")
+//				.path(organizationId).path("environments").path(environmentId).path("applications");
 		WebTarget target = restClient.target(HTTPS_ANYPOINT_MULESOFT_COM).path("exchange/api/v1/organizations")
 				.path(organizationId).path("applications");
 
+//		System.err.println("getApplicationList: " + target.toString());
 		Response response = target.request().header("Authorization", authorizationHdr)
 				.accept(MediaType.APPLICATION_JSON).get();
 
@@ -516,7 +547,7 @@ public class ApiConfigTool {
 	private static void createApplication(Client restClient, String authorizationHdr, String organizationId,
 			String applicationName, String description) throws JsonProcessingException {
 		String desc = (description == null)
-				? "Auto generated client credentials for this API instance to use calling other dependencies."
+				? "Auto generated the my_client credentials for this API instance to use calling other dependencies."
 				: description;
 		LinkedHashMap<String, Object> applicationValues = new LinkedHashMap<String, Object>();
 		applicationValues.put("name", applicationName);
@@ -528,6 +559,8 @@ public class ApiConfigTool {
 		WebTarget target = restClient.target(HTTPS_ANYPOINT_MULESOFT_COM).path("exchange/api/v1/organizations")
 				.path(organizationId).path("applications");
 
+//		System.out.println("createApplication: " + target.toString());
+
 		Response response = target.request().header("Authorization", authorizationHdr)
 				.accept(MediaType.APPLICATION_JSON).post(Entity.entity(payload, MediaType.APPLICATION_JSON));
 
@@ -537,6 +570,10 @@ public class ApiConfigTool {
 		}
 		if (response != null && (response.getStatus() == 201 || response.getStatus() == 409)) {
 //			System.err.println(response.readEntity(String.class));
+		} else if (response.getStatus() == 502) {
+			System.err.println("\n***NOTE*** If this is an Exernal Identity OpenId Client Management configuration, you may not have access to the Identity Provider.");
+			System.err.println("Failed to create application information (" + statuscode + ")");
+			System.err.println(response.readEntity(String.class) + "\n");
 		} else {
 			System.err.println("Failed to create application information (" + statuscode + ")");
 			System.err.println(response.readEntity(String.class));

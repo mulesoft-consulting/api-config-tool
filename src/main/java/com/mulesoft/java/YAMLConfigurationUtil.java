@@ -34,7 +34,7 @@ public class YAMLConfigurationUtil {
 	}
 
 	@SuppressWarnings("rawtypes")
-	public void map2yaml(Map<String, Object> yamlPropertiesMap, String fileLocation) {
+	public void map2yaml(Map<String, Object> yamlPropertiesMap, String fileLocation) throws IOException {
 		FileWriter writer = null;
 		try {
 			// to preserve the YAML Hierarchy in the YAML file
@@ -47,12 +47,14 @@ public class YAMLConfigurationUtil {
 			yamlMapper.disable(Feature.MINIMIZE_QUOTES);
 			yamlMapper.disable(Feature.WRITE_DOC_START_MARKER);
 			String yamlString = yamlMapper.writeValueAsString( resultMap);
-			//System.out.println(yamlString);
+//			System.out.println(yamlString);
 			writer.write(yamlString);
 
 		} catch (IOException e) {
 			IOUtils.closeQuietly(writer);
 			e.printStackTrace();
+		} finally {
+			writer.close();
 		}
 
 	}
