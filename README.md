@@ -154,4 +154,5 @@ java -jar target/ApiConfigTool.jar configureProjectResourceFile myAnypointUser M
 |version|who|description|
 | --- | --- | --- |
 |1.0.4|pdd|Jackson databind security release fix. Add my.client_ variables to environment configuration file (DEV-config.properties for instance).|	
+|1.0.5|pdd|create a -config.properties if no other config file is found|	
 	
