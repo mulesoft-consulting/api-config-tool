@@ -33,7 +33,7 @@ public class ApiConfigTool {
 	public static String HTTPS_ANYPOINT_MULESOFT_COM = "https://anypoint.mulesoft.com";
 	public static boolean makeApiNameBusinessGroupSensitive = false;
 	public static String RESOURCES_DIR = "src/main/resources";
-	public static String API_VERSION_HEADER_MSG = "ApiConfigTool version 1.0.4";
+	public static String API_VERSION_HEADER_MSG = "ApiConfigTool version 1.0.5";
 
 	public static void main(String[] args) {
 
@@ -134,7 +134,21 @@ public class ApiConfigTool {
 				yamlConfUtil.map2yaml(yamlConfigProperties, yamlFileLocation);
 				System.err.println("Updated API auto discovery details in the property file : " + yamlFile.getAbsolutePath());
 			} else {
-				System.err.println("***WARN*** " + file.getAbsolutePath() + " does not exist.");
+				System.err.println("Creating property file " + file.getAbsolutePath());
+
+				@SuppressWarnings("unchecked")
+				LinkedHashMap<String, String> generatedProperties = (LinkedHashMap<String, String>) map
+						.get("properties");
+				configProperties.put("api.name", generatedProperties.get("auto-discovery-apiName"));
+				configProperties.put("api.version", generatedProperties.get("auto-discovery-apiVersion"));
+				configProperties.put("api.id", generatedProperties.get("auto-discovery-apiId"));
+				configProperties.put("my.client_id", (generatedProperties.get("my.client_id") != null)?generatedProperties.get("my.client_id"):"");
+				configProperties.put("my.client_secret", (generatedProperties.get("my.client_secret") != null)?generatedProperties.get("my.client_secret"):"");
+				configProperties.put("my.client_name", (generatedProperties.get("my.client_name") != null)?generatedProperties.get("my.client_name"):"");
+
+				output = FileUtils.openOutputStream(file);
+				configProperties.store(output, null);
+				System.err.println("Added API auto discovery details in the property file : " + file.getAbsolutePath());
 			}
 		} catch (IOException ex) {
 			IOUtils.closeQuietly(input);
