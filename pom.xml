@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.mulesoft.java</groupId>
 	<artifactId>mule-api-config</artifactId>
-	<version>1.0.5</version>
+	<version>1.0.6</version>
 	<name>Mule API Config Tool</name>
 	<description>Config a Mule API into Anypoint Platform</description>
 	<properties>

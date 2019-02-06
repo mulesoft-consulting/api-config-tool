@@ -1,0 +1,11 @@
+[{
+		"apiName": "apiName-01",
+		"apiVersion": "1.0.0",
+		"usedByApps": ["appName-a", "appName-b", "appName-c"]
+	},
+	{
+		"apiName": "apiName-02",
+		"apiVersion": "1.0.0",
+		"usedByApps": ["appName-a", "appName-b"]
+	}
+]

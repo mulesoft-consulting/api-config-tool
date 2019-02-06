@@ -33,7 +33,7 @@ public class ApiConfigTool {
 	public static String HTTPS_ANYPOINT_MULESOFT_COM = "https://anypoint.mulesoft.com";
 	public static boolean makeApiNameBusinessGroupSensitive = false;
 	public static String RESOURCES_DIR = "src/main/resources";
-	public static String API_VERSION_HEADER_MSG = "ApiConfigTool version 1.0.5";
+	public static String API_VERSION_HEADER_MSG = "ApiConfigTool version 1.0.6";
 
 	public static void main(String[] args) {
 
@@ -110,7 +110,8 @@ public class ApiConfigTool {
 				configProperties.put("api.version", generatedProperties.get("auto-discovery-apiVersion"));
 				configProperties.put("api.id", generatedProperties.get("auto-discovery-apiId"));
 				configProperties.put("my.client_id", (generatedProperties.get("my.client_id") != null)?generatedProperties.get("my.client_id"):"");
-				configProperties.put("my.client_secret", (generatedProperties.get("my.client_secret") != null)?generatedProperties.get("my.client_secret"):"");
+//				configProperties.put("my.client_secret", (generatedProperties.get("my.client_secret") != null)?generatedProperties.get("my.client_secret"):"");
+				configProperties.put("my.client_secret", "");
 				configProperties.put("my.client_name", (generatedProperties.get("my.client_name") != null)?generatedProperties.get("my.client_name"):"");
 
 				output = FileUtils.openOutputStream(file);
@@ -129,7 +130,8 @@ public class ApiConfigTool {
 				yamlConfigProperties.put("api.version", generatedProperties.get("auto-discovery-apiVersion"));
 				yamlConfigProperties.put("api.id", generatedProperties.get("auto-discovery-apiId"));
 				yamlConfigProperties.put("my.client_id", (generatedProperties.get("my.client_id") != null)?generatedProperties.get("my.client_id"):"");
-				yamlConfigProperties.put("my.client_secret", (generatedProperties.get("my.client_secret") != null)?generatedProperties.get("my.client_secret"):"");
+//				yamlConfigProperties.put("my.client_secret", (generatedProperties.get("my.client_secret") != null)?generatedProperties.get("my.client_secret"):"");
+				yamlConfigProperties.put("my.client_secret", "");
 				yamlConfigProperties.put("my.client_name", (generatedProperties.get("my.client_name") != null)?generatedProperties.get("my.client_name"):"");
 				yamlConfUtil.map2yaml(yamlConfigProperties, yamlFileLocation);
 				System.err.println("Updated API auto discovery details in the property file : " + yamlFile.getAbsolutePath());
@@ -143,7 +145,8 @@ public class ApiConfigTool {
 				configProperties.put("api.version", generatedProperties.get("auto-discovery-apiVersion"));
 				configProperties.put("api.id", generatedProperties.get("auto-discovery-apiId"));
 				configProperties.put("my.client_id", (generatedProperties.get("my.client_id") != null)?generatedProperties.get("my.client_id"):"");
-				configProperties.put("my.client_secret", (generatedProperties.get("my.client_secret") != null)?generatedProperties.get("my.client_secret"):"");
+//				configProperties.put("my.client_secret", (generatedProperties.get("my.client_secret") != null)?generatedProperties.get("my.client_secret"):"");
+				configProperties.put("my.client_secret", "");
 				configProperties.put("my.client_name", (generatedProperties.get("my.client_name") != null)?generatedProperties.get("my.client_name"):"");
 
 				output = FileUtils.openOutputStream(file);
