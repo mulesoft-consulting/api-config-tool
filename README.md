@@ -11,20 +11,24 @@ The ApiConfigTool can be used in its current form to register APIs, although it 
 The API manager autodiscovery values will be stored in the src/main/resources directory in the environment's -config.properties (or -config.yaml) depending upon which file exists in the directory. This results in an environment specific configuration file that can be used to identify the API Manager defined characteristics of the API. Here is a sample of an DEV-config.properties file contents:
 
 ```
-#Mon Jan 07 13:18:22 PST 2019
+\#Mon Jan 07 13:18:22 PST 2019
+
 api.id=15607288
-api.name=groupId\:50228d0d-2c1f-4548-9c8a-90c0ebb480b9\:assetId\:50228d0d-2c1f-4548-9c8a-90c0ebb480b9_pdd-exp_1.0.0
+api.name=groupId\:50228d0d-2c1f-4548-9c8a-90c0ebb480b9\:assetId
+\:50228d0d-2c1f-4548-9c8a-90c0ebb480b9_pdd-exp_1.0.0
 api.version=1.0.0\:15607288
 my.client_id=da183b8d12cf4c06814a81a5574e95bb
 my.client_name=PDD-EXP_SANDBOX
 my.client_secret=39e75F05e151453C86dAFd1EB8dC14BB
 ```
+
 Here is an example of a yaml file:
 
 ```
 api:
   id: "15607289"
-  name: "groupId:50228d0d-2c1f-4548-9c8a-90c0ebb480b9:assetId:50228d0d-2c1f-4548-9c8a-90c0ebb480b9_pdd-exp_1.0.0"
+  name: 
+"groupId:50228d0d-2c1f-4548-9c8a-90c0ebb480b9:assetId:50228d0d-2c1f-4548-9c8a-90c0ebb480b9_pdd-exp_1.0.0"
   version: "1.0.0:15607289"
 my:
   client_name: "PDD-EXP_SANDBOX"
@@ -39,7 +43,7 @@ This document will explain the current tool and how it uses the command line val
 The ApiConfigTool is a java program. To register a Mule 3 API use this command:
 
 ```
-java -jar target/ApiConfigTool.jar configureProjectResourceFile myAnypointUser MyAnypointPassword "businessGroupName" myApi v1 "myEnvironmentName" my-policies.json my‑clients.json
+java -jar target/ApiConfigTool.jar configureProjectResourceFile myAnypointUser MyAnypointPassword "businessGroupName" myApi v1 "myEnvironmentName" my-policies.json my‑clients.json sla-tiers.json
 ```
 
 **configureProjectResourceFile** is the operation to execute. This operation configures the API in Anypoint Exchange and creates the API Manager instance for the environment. If the API Exchange or API Manager instance already exists, then the current settings are used.
@@ -58,6 +62,8 @@ java -jar target/ApiConfigTool.jar configureProjectResourceFile myAnypointUser M
 
 **my-policies.json** is a file that contains the list of policies that will be applied to the API Instance being registered. See the following section on "Defining Policies" for more information on this file.
 
+**sla-tiers.json** is a file that contains the list of SLA tiers to apply to the API Instance. See the section on "Defining SLA tiers" for more information on this file.
+
 The file name specified here must either be in the current running directory or on the Java classpath as a resource file. The default file is distributed in the project as client‑credentials‑policy which applies client credential enforcement using HTTP headers client\_id and client\_secret.
 
 **my-clients.json** is a file that contains the list of client applications that will be registered as consumers of the API. As noted earlier, these client applications will be created if they do not already exist. Do to the current structure of Anypoint Access Management, the client application will fail if it already exists in another part of the Master Org that the specified Anypoint user performing the registration does not have access to. See the following section on "Defining a Client List" for more information on this file contents.
@@ -69,12 +75,12 @@ The file name specified here must either be in the current running directory or 
 Similarly, register an API running in Mule 4 with this command:
 
 ```
-java -jar target/ApiConfigTool.jar mule4ConfigureProjectResourceFile myAnypointUser MyAnypointPassword "businessGroupName" myApi v1 "myEnvironmentName" my-policies.json my‑clients.json
+java -jar target/ApiConfigTool.jar mule4ConfigureProjectResourceFile myAnypointUser MyAnypointPassword "businessGroupName" myApi v1 "myEnvironmentName" my-policies.json my‑clients.json sla-tiers.json
 ```
 
 ## Defining Policies
 
-The policies are defined in a file that is named when the ApiConfigTool is executed. The file that can be current directory where ApiConfigTool is running, or in the Java classpath. The current directory is searched first.
+The policies are defined in a file that is named when the ApiConfigTool is executed. The file that can be in current directory where ApiConfigTool is running, or in the Java classpath. The current directory is searched first.
 
 The file is in json format and lists the policies that should be applied to the API Instance. There are several examples of policy definitions in the resources directory of the ApiConfigTool:
 
@@ -146,13 +152,37 @@ The registration assumes no SLA's are configured for the API. Here is an example
 ]
 ```
 
-### Sample command line run from project's directory:
+## Defining SLA Tiers
+
+SLA Tiers are defined in a file that is named when the ApiConfigTool is executed. The file that can be in current directory where ApiConfigTool is running, or in the Java classpath. The current directory is searched first.
+
+The file is in json format and lists the SLA Tiers that should be applied to the API Instance. Two SLA Tiers are predefined:
+
+- empty-sla-tiers-list
+- manual-approval-required
+
+To determine more SLA Tiers, use the "Developer view" of a Chrome browser when adding SLA Tiers through API Management to determine what properties and names to use. These are not really documented anywhere.
+
+Here is an example of manual-approval-required SLA for Mule 4:
+
 ```
-java -jar target/ApiConfigTool.jar configureProjectResourceFile myAnypointUser MyAnypointPassword "businessGroupName" myApi v1 "myEnvironmentName" my-policies.json my-clients.json
+[{
+	"status": "ACTIVE",
+	"autoApprove": false,
+	"limits": [{
+		"visible": true,
+		"timePeriodInMilliseconds": 1000,
+		"maximumRequests": 1000
+	}],
+	"name": "manual-approval-required"
+}]
 ```
+
 ## Revisions
 |version|who|description|
 | --- | --- | --- |
 |1.0.4|pdd|Jackson databind security release fix. Add my.client_ variables to environment configuration file (DEV-config.properties for instance).|	
 |1.0.5|pdd|create a -config.properties if no other config file is found|	
+|1.0.7|pdd|add SLA Tiers feature|
+
 	

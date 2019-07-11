@@ -1,0 +1,10 @@
+[{
+	"status": "ACTIVE",
+	"autoApprove": false,
+	"limits": [{
+		"visible": true,
+		"timePeriodInMilliseconds": 1000,
+		"maximumRequests": 1000
+	}],
+	"name": "manual-approval-required"
+}]

@@ -33,7 +33,7 @@ public class ApiConfigTool {
 	public static String HTTPS_ANYPOINT_MULESOFT_COM = "https://anypoint.mulesoft.com";
 	public static boolean makeApiNameBusinessGroupSensitive = false;
 	public static String RESOURCES_DIR = "src/main/resources";
-	public static String API_VERSION_HEADER_MSG = "ApiConfigTool version 1.0.6";
+	public static String API_VERSION_HEADER_MSG = "ApiConfigTool version 1.0.7";
 
 	public static void main(String[] args) {
 
@@ -49,7 +49,9 @@ public class ApiConfigTool {
 						(args.length > 2) ? args[2] : "userPass", (args.length > 3) ? args[3] : "orgName",
 						(args.length > 4) ? args[4] : "apiName", (args.length > 5) ? args[5] : "apiVersion",
 						(args.length > 6) ? args[6] : "DEV", (args.length > 7) ? args[7] : "client-credentials-policy",
-						(args.length > 8) ? args[8] : "empty-client-access-list", false);
+						(args.length > 8) ? args[8] : "empty-client-access-list",
+						false,
+						(args.length > 9) ? args[9] : "empty-sla-tiers-list");
 				updateProjectResourceConfigProperties(returnMap, false);
 				System.err.println(
 						API_VERSION_HEADER_MSG + " Successful completion " + args[0] + " environment: " + args[6]);
@@ -61,7 +63,9 @@ public class ApiConfigTool {
 						(args.length > 4) ? args[4] : "apiName", (args.length > 5) ? args[5] : "apiVersion",
 						(args.length > 6) ? args[6] : "DEV",
 						(args.length > 7) ? args[7] : "mule4-client-credentials-policy",
-						(args.length > 8) ? args[8] : "empty-client-access-list", true);
+						(args.length > 8) ? args[8] : "empty-client-access-list",
+						true,
+						(args.length > 9) ? args[9] : "empty-sla-tiers-list");
 				updateProjectResourceConfigProperties(returnMap, true);
 				System.err.println(
 						API_VERSION_HEADER_MSG + " Successful completion " + args[0] + " environment: " + args[6]);
@@ -201,7 +205,7 @@ public class ApiConfigTool {
 	@SuppressWarnings("unchecked")
 	private static LinkedHashMap<String, Object> configureApi(String userName, String userPass,
 			String businessGroupName, String apiName, String apiVersion, String environmentName, String policies,
-			String clients, boolean mule4OrAbove) throws Exception {
+			String clients, boolean mule4OrAbove, String slaTiers) throws Exception {
 
 		LinkedHashMap<String, Object> returnPayload = new LinkedHashMap<String, Object>();
 		LinkedHashMap<String, String> returnPayloadProperties = new LinkedHashMap<String, String>();
@@ -328,6 +332,16 @@ public class ApiConfigTool {
 			createApplicationContracts(client, authorizationHdr, businessGroupId, businessGroupName, businessGroupId,
 					environmentName, environmentId, exchangeAssetId, exchangeAssetVersion, autoDiscoveryApiId,
 					apiVersion, clients, applications);
+		} catch (Exception e) {
+			e.printStackTrace(System.err);
+		}
+
+		try {
+			/*
+			 * Add SLA Tiers
+			 */
+			addSlaTiers(client, authorizationHdr, businessGroupId, environmentId, autoDiscoveryApiId, slaTiers,
+					mule4OrAbove);
 		} catch (Exception e) {
 			e.printStackTrace(System.err);
 		}
@@ -1007,6 +1021,86 @@ public class ApiConfigTool {
 			}
 		} catch (Exception e) {
 			System.err.println("Cannot set policy:\n " + policyStr);
+			e.printStackTrace(System.err);
+		}
+	}
+
+	private static void addSlaTiers(Client restClient, String authorizationHdr, String businessGroupId,
+			String environmentId, String apiInstanceId, String slaTiers, boolean mule4OrAbove) {
+
+		ArrayList<LinkedHashMap<String, Object>> tiers;
+		ObjectMapper mapper;
+		TypeFactory factory;
+		CollectionType type;
+
+		factory = TypeFactory.defaultInstance();
+		type = factory.constructCollectionType(ArrayList.class, LinkedHashMap.class);
+		mapper = new ObjectMapper();
+
+		InputStream is = null;
+		File slaTiersFile = new File(slaTiers);
+		String slaTierStr = null;
+		try {
+			if (slaTiersFile.exists()) {
+				slaTierStr = FileUtils.readFileToString(slaTiersFile, "UTF-8");
+			} else {
+				is = ApiConfigTool.class.getClassLoader().getResourceAsStream(slaTiers);
+				slaTierStr = IOUtils.toString(is, "UTF-8");
+			}
+//			System.err.println(slaTierStr);
+			tiers = mapper.readValue(slaTierStr, type);
+
+			for (LinkedHashMap<String, Object> i : tiers) {
+				addSlaTier(restClient, authorizationHdr, businessGroupId, environmentId, apiInstanceId, i,
+						mule4OrAbove);
+			}
+
+		} catch (Exception e) {
+			System.err.println("Cannot use tiers from file " + slaTiers);
+			e.printStackTrace(System.err);
+			System.exit(1);
+		} finally {
+			if (is != null)
+				IOUtils.closeQuietly(is);
+		}
+
+	}
+
+	private static void addSlaTier(Client restClient, String authorizationHdr, String businessGroupId,
+			String environmentId, String apiInstanceId, LinkedHashMap<String, Object> slaTier, boolean mule4OrAbove)
+			throws JsonProcessingException {
+
+		String slaTierStr = null;
+		LinkedHashMap<String, Object> newTier = new LinkedHashMap<String, Object>();
+		newTier.putAll(slaTier);
+		if (mule4OrAbove) {
+			newTier.put("apiVersionId", apiInstanceId);
+		}
+
+		try {
+			ObjectMapper mapperw = new ObjectMapper();
+			slaTierStr = mapperw.writeValueAsString(newTier);
+//			System.err.println("Setting tier " + slaTierStr);
+			WebTarget target = restClient.target(HTTPS_ANYPOINT_MULESOFT_COM).path("apimanager/api/v1/organizations")
+					.path(businessGroupId).path("environments").path(environmentId).path("apis").path(apiInstanceId)
+					.path("tiers");
+
+			Response response = target.request().accept(MediaType.APPLICATION_JSON)
+					.header("Authorization", authorizationHdr)
+					.post(Entity.entity(slaTierStr, MediaType.APPLICATION_JSON));
+
+			int statuscode = 500;
+			if (response != null) {
+				statuscode = response.getStatus();
+			}
+			if (response != null && (response.getStatus() == 201 || response.getStatus() == 409)) {
+//				System.err.println(response.readEntity(String.class));
+			} else {
+				System.err.println("Failed to apply tier " + slaTierStr + ". (" + statuscode + ")");
+				System.err.println(response.readEntity(String.class));
+			}
+		} catch (Exception e) {
+			System.err.println("Cannot set tier:\n " + slaTierStr);
 			e.printStackTrace(System.err);
 		}
 	}
