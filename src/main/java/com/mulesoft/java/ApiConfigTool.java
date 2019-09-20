@@ -33,7 +33,7 @@ public class ApiConfigTool {
 	public static String HTTPS_ANYPOINT_MULESOFT_COM = "https://anypoint.mulesoft.com";
 	public static boolean makeApiNameBusinessGroupSensitive = false;
 	public static String RESOURCES_DIR = "src/main/resources";
-	public static String API_VERSION_HEADER_MSG = "ApiConfigTool version 1.0.7";
+	public static String API_VERSION_HEADER_MSG = "ApiConfigTool version 1.0.8";
 
 	public static void main(String[] args) {
 
@@ -259,13 +259,20 @@ public class ApiConfigTool {
 		LinkedHashMap<String, Object> apiAsset = null;
 		apiAsset = findApiAsset(apiAssets, myOrganizationName, businessGroupName, apiName, apiVersion);
 
-		if (apiAsset == null) {
+		if (apiAsset != null) {
+//			ObjectMapper mapperw = new ObjectMapper();
+//			System.err.println(
+//					"existing Exchange asset: " + mapperw.writerWithDefaultPrettyPrinter().writeValueAsString(apiAsset));
+		} else {
 			publishAPItoExchange(client, authorizationHdr, apiName, apiVersion, myOrganizationName, myOrganizationId,
 					businessGroupName, businessGroupId);
 			apiAssets = getExchangeAssets(client, authorizationHdr, businessGroupId, apiName);
 			apiAsset = findApiAsset(apiAssets, myOrganizationName, businessGroupName, apiName, apiVersion);
+//			ObjectMapper mapperw = new ObjectMapper();
+//			System.err.println(
+//					"existing Exchange asset: " + mapperw.writerWithDefaultPrettyPrinter().writeValueAsString(apiAsset));
 		}
-//		System.err.println("apiAsset:" + apiAsset);
+		
 		String exchangeAssetId = (String) apiAsset.get("assetId");
 		String exchangeAssetVersion = (String) apiAsset.get("version");
 		String exchangeAssetName = (String) apiAsset.get("name");
@@ -720,11 +727,12 @@ public class ApiConfigTool {
 			}
 		}
 
-		if (result != null) {
+//		if (result != null) {
 //			ObjectMapper mapperw = new ObjectMapper();
 //			System.err.println(
-//					"existing Exchange asset: " + mapperw.writerWithDefaultPrettyPrinter().writeValueAsString(result));
-		}
+//					"Found Exchange asset: " + mapperw.writerWithDefaultPrettyPrinter().writeValueAsString(result));
+//		}
+		
 		return result;
 	}
 
@@ -749,10 +757,10 @@ public class ApiConfigTool {
 			return null;
 		}
 
-		if (result != null) {
-			// ObjectMapper mapperw = new ObjectMapper();
-			// System.err.println("assets: " +
-			// mapperw.writerWithDefaultPrettyPrinter().writeValueAsString(result));
+		if (result != null) { 
+//			 ObjectMapper mapperw = new ObjectMapper();
+//			 System.err.println("assets: " +
+//			 mapperw.writerWithDefaultPrettyPrinter().writeValueAsString(result));
 			return result;
 		} else {
 			// System.err.println("Failed to find Exchange assets");
