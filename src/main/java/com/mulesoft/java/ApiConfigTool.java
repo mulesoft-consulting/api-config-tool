@@ -94,10 +94,10 @@ public class ApiConfigTool {
 		 */
 		try {
 			StringBuilder filename = new StringBuilder();
-			filename.append(map.get("envName")).append("-config.properties");
+			filename.append(map.get("envName").toString().toUpperCase()).append("-config.properties");
 			File file = new File(resourcesDir, filename.toString());
 			StringBuilder yamlFileName = new StringBuilder();
-			yamlFileName.append(map.get("envName")).append("-config.yaml");
+			yamlFileName.append(map.get("envName").toString().toUpperCase())).append("-config.yaml");
 			File yamlFile = new File(resourcesDir, yamlFileName.toString());
 
 			if ((file.exists() && !isMule4Runtime) || (!yamlFile.exists() && file.exists() && isMule4Runtime) ){
