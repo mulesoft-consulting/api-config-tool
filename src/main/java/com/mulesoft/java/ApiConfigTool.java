@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -33,7 +34,7 @@ public class ApiConfigTool {
 	public static String HTTPS_ANYPOINT_MULESOFT_COM = "https://anypoint.mulesoft.com";
 	public static boolean makeApiNameBusinessGroupSensitive = false;
 	public static String RESOURCES_DIR = "src/main/resources";
-	public static String API_VERSION_HEADER_MSG = "ApiConfigTool version 1.0.8";
+	public static String API_VERSION_HEADER_MSG = "ApiConfigTool version 1.0.10";
 
 	public static void main(String[] args) {
 
@@ -53,8 +54,9 @@ public class ApiConfigTool {
 						false,
 						(args.length > 9) ? args[9] : "empty-sla-tiers-list");
 				updateProjectResourceConfigProperties(returnMap, false);
+				System.err.println();
 				System.err.println(
-						API_VERSION_HEADER_MSG + " Successful completion " + args[0] + " environment: " + args[6]);
+						API_VERSION_HEADER_MSG + " Completion " + args[0] + " environment: " + args[6]);
 				System.err.println("\n");
 			} else if (args[0].equals("mule4ConfigureProjectResourceFile")) {
 				System.err.println(API_VERSION_HEADER_MSG + " Starting " + args[0] + " environment: " + args[6]);
@@ -67,8 +69,9 @@ public class ApiConfigTool {
 						true,
 						(args.length > 9) ? args[9] : "empty-sla-tiers-list");
 				updateProjectResourceConfigProperties(returnMap, true);
+				System.err.println();
 				System.err.println(
-						API_VERSION_HEADER_MSG + " Successful completion " + args[0] + " environment: " + args[6]);
+						API_VERSION_HEADER_MSG + " Completion " + args[0] + " environment: " + args[6]);
 				System.err.println("\n");
 			} else {
 				printHelp();
@@ -97,9 +100,10 @@ public class ApiConfigTool {
 			filename.append(map.get("envName").toString().toUpperCase()).append("-config.properties");
 			File file = new File(resourcesDir, filename.toString());
 			StringBuilder yamlFileName = new StringBuilder();
-			yamlFileName.append(map.get("envName").toString().toUpperCase())).append("-config.yaml");
+			yamlFileName.append(map.get("envName").toString().toUpperCase()).append("-config.yaml");
 			File yamlFile = new File(resourcesDir, yamlFileName.toString());
 
+			System.err.println();
 			if ((file.exists() && !isMule4Runtime) || (!yamlFile.exists() && file.exists() && isMule4Runtime) ){
 				System.err.println("Reading property file from the location " + file.getAbsolutePath());
 				input = FileUtils.openInputStream(file);
@@ -259,20 +263,13 @@ public class ApiConfigTool {
 		LinkedHashMap<String, Object> apiAsset = null;
 		apiAsset = findApiAsset(apiAssets, myOrganizationName, businessGroupName, apiName, apiVersion);
 
-		if (apiAsset != null) {
-//			ObjectMapper mapperw = new ObjectMapper();
-//			System.err.println(
-//					"existing Exchange asset: " + mapperw.writerWithDefaultPrettyPrinter().writeValueAsString(apiAsset));
-		} else {
+		if (apiAsset == null) {
 			publishAPItoExchange(client, authorizationHdr, apiName, apiVersion, myOrganizationName, myOrganizationId,
 					businessGroupName, businessGroupId);
 			apiAssets = getExchangeAssets(client, authorizationHdr, businessGroupId, apiName);
 			apiAsset = findApiAsset(apiAssets, myOrganizationName, businessGroupName, apiName, apiVersion);
-//			ObjectMapper mapperw = new ObjectMapper();
-//			System.err.println(
-//					"existing Exchange asset: " + mapperw.writerWithDefaultPrettyPrinter().writeValueAsString(apiAsset));
 		}
-		
+//		System.err.println("apiAsset:" + apiAsset);
 		String exchangeAssetId = (String) apiAsset.get("assetId");
 		String exchangeAssetVersion = (String) apiAsset.get("version");
 		String exchangeAssetName = (String) apiAsset.get("name");
@@ -323,15 +320,17 @@ public class ApiConfigTool {
 			}
 		}
 
+		ArrayList<LinkedHashMap<String, Object>> currentPolicies = null;
 		try {
 			/*
 			 * Add API Policies
 			 */
+			System.err.println();
+			currentPolicies = getApiPolicies(client, authorizationHdr, businessGroupId, environmentId, autoDiscoveryApiId);
+						
 			addApiPolicies(client, authorizationHdr, businessGroupId, environmentId, autoDiscoveryApiId, policies,
-					mule4OrAbove);
-			// don't need: getApiPolicies(client, authorizationHdr, businessGroupId,
-			// environmentId, autoDiscoveryApiId);
-
+					(ArrayList<LinkedHashMap<String, Object>>) currentPolicies, mule4OrAbove);
+			
 			/*
 			 * Add application contracts
 			 */
@@ -339,6 +338,7 @@ public class ApiConfigTool {
 			createApplicationContracts(client, authorizationHdr, businessGroupId, businessGroupName, businessGroupId,
 					environmentName, environmentId, exchangeAssetId, exchangeAssetVersion, autoDiscoveryApiId,
 					apiVersion, clients, applications);
+			
 		} catch (Exception e) {
 			e.printStackTrace(System.err);
 		}
@@ -727,12 +727,11 @@ public class ApiConfigTool {
 			}
 		}
 
-//		if (result != null) {
+		if (result != null) {
 //			ObjectMapper mapperw = new ObjectMapper();
 //			System.err.println(
-//					"Found Exchange asset: " + mapperw.writerWithDefaultPrettyPrinter().writeValueAsString(result));
-//		}
-		
+//					"existing Exchange asset: " + mapperw.writerWithDefaultPrettyPrinter().writeValueAsString(result));
+		}
 		return result;
 	}
 
@@ -757,10 +756,10 @@ public class ApiConfigTool {
 			return null;
 		}
 
-		if (result != null) { 
-//			 ObjectMapper mapperw = new ObjectMapper();
-//			 System.err.println("assets: " +
-//			 mapperw.writerWithDefaultPrettyPrinter().writeValueAsString(result));
+		if (result != null) {
+			// ObjectMapper mapperw = new ObjectMapper();
+			// System.err.println("assets: " +
+			// mapperw.writerWithDefaultPrettyPrinter().writeValueAsString(result));
 			return result;
 		} else {
 			// System.err.println("Failed to find Exchange assets");
@@ -827,6 +826,7 @@ public class ApiConfigTool {
 	private static LinkedHashMap<String, Object> getApiManagerAsset(Client restClient, String authorizationHdr,
 			String businessGroupId, String environmentId, String assetId, String assetVersion)
 			throws JsonProcessingException {
+
 		WebTarget target = restClient.target(HTTPS_ANYPOINT_MULESOFT_COM).path("apimanager/api/v1/organizations")
 				.path(businessGroupId).path("environments").path(environmentId).path("apis")
 				.queryParam("assetId", assetId).queryParam("assetVersion", assetVersion).queryParam("limit", 400)
@@ -918,25 +918,27 @@ public class ApiConfigTool {
 	}
 
 	@SuppressWarnings({ "unchecked", "unused" })
-	private static ArrayList<LinkedHashMap<String, Object>> getApiPolicies(Client restClient, String authorizationHdr,
+	private static ArrayList <LinkedHashMap<String, Object>> getApiPolicies(Client restClient, String authorizationHdr,
 			String businessGroupId, String environmentId, String apiInstanceId) throws JsonProcessingException {
 		WebTarget target = restClient.target(HTTPS_ANYPOINT_MULESOFT_COM).path("apimanager/api/v1/organizations")
 				.path(businessGroupId).path("environments").path(environmentId).path("apis").path(apiInstanceId)
-				.path("policies");
+				.path("policies").queryParam("fullInfo", "false");
+//		System.out.println(target.toString());
 
 		Response response = target.request().header("Authorization", authorizationHdr)
 				.accept(MediaType.APPLICATION_JSON).get();
 
 		int statuscode = 500;
-		ArrayList<LinkedHashMap<String, Object>> result = null;
+		ArrayList <LinkedHashMap<String, Object>> result = null;
 		if (response != null) {
 			statuscode = response.getStatus();
 		}
 		if (response != null && response.getStatus() == 200) {
 			try {
-				result = (ArrayList<LinkedHashMap<String, Object>>) response.readEntity(ArrayList.class);
+				result = (ArrayList<LinkedHashMap<String, Object>>) response.readEntity(ArrayList.class); 
 			} catch (Exception e) {
-				System.err.println("***INFO*** Policies list not available yet...check later");
+				System.err.println("***API ERROR*** " + response.toString());
+				System.err.println("***INFO*** Policies list not available...check API and version in Exchange and API Manager.");
 			}
 		} else {
 			System.err.println("Failed to get API policies (" + statuscode + ")");
@@ -954,7 +956,7 @@ public class ApiConfigTool {
 	}
 
 	private static void addApiPolicies(Client restClient, String authorizationHdr, String businessGroupId,
-			String environmentId, String apiInstanceId, String apiPolicies, boolean mule4OrAbove) {
+			String environmentId, String apiInstanceId, String apiPolicies, ArrayList <LinkedHashMap<String, Object>> currentPolicies, boolean mule4OrAbove) {
 
 		ArrayList<LinkedHashMap<String, Object>> policies;
 		ObjectMapper mapper;
@@ -979,8 +981,13 @@ public class ApiConfigTool {
 			policies = mapper.readValue(policiesStr, type);
 
 			for (LinkedHashMap<String, Object> i : policies) {
-				addApiPolicy(restClient, authorizationHdr, businessGroupId, environmentId, apiInstanceId, i,
-						mule4OrAbove);
+				if (!policyExists(currentPolicies, i, mule4OrAbove)) {
+					addApiPolicy(restClient, authorizationHdr, businessGroupId, environmentId, apiInstanceId, i,
+							mule4OrAbove);
+					System.err.println("***INFO*** " + i.get("assetId") + " policy added.");
+				} else {
+					System.err.println("***INFO*** " + i.get("assetId") + " already exists, add not performed.");
+				}
 			}
 
 		} catch (Exception e) {
@@ -992,6 +999,23 @@ public class ApiConfigTool {
 				IOUtils.closeQuietly(is);
 		}
 
+	}
+	
+	private static boolean policyExists(ArrayList <LinkedHashMap<String, Object>> currentPolicies, LinkedHashMap<String, Object> apiPolicy, boolean mule4OrAbove) {
+		if (currentPolicies == null) return false;
+		
+		for (LinkedHashMap<String, Object> i : currentPolicies) {
+			if (mule4OrAbove) {
+				if (i.get("assetId").equals(apiPolicy.get("assetId"))) {
+					return true;
+				}
+			} else {			
+				if (i.get("assetId").equals(apiPolicy.get("policyTemplateId"))) {
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 
 	private static void addApiPolicy(Client restClient, String authorizationHdr, String businessGroupId,
