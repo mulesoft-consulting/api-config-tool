@@ -4,7 +4,7 @@
   <groupId>com.mulesoft.java</groupId>
   <artifactId>mule-api-config</artifactId>
   <name>Mule API Config Tool</name>
-  <version>1.0.8</version>
+  <version>1.0.12</version>
   <description>Config a Mule API into Anypoint Platform</description>
   <build>
     <finalName>ApiConfigTool</finalName>
@@ -55,9 +55,10 @@
     </dependency>
   </dependencies>
   <properties>
-    <jackson-2-version>2.9.8</jackson-2-version>
+    <jackson-2-version>2.9.10</jackson-2-version>
     <jdk.version>1.8</jdk.version>
     <mule.version>3.9.0</mule.version>
+    <jackson-2-bind-version>2.9.10.4</jackson-2-bind-version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <jersey-client-version>1.19.3</jersey-client-version>
   </properties>

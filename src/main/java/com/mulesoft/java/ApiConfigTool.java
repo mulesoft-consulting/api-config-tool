@@ -34,7 +34,7 @@ public class ApiConfigTool {
 	public static String HTTPS_ANYPOINT_MULESOFT_COM = "https://anypoint.mulesoft.com";
 	public static boolean makeApiNameBusinessGroupSensitive = false;
 	public static String RESOURCES_DIR = "src/main/resources";
-	public static String API_VERSION_HEADER_MSG = "ApiConfigTool version 1.0.10";
+	public static String API_VERSION_HEADER_MSG = "ApiConfigTool version 1.0.12";
 
 	public static void main(String[] args) {
 
@@ -270,6 +270,7 @@ public class ApiConfigTool {
 			apiAsset = findApiAsset(apiAssets, myOrganizationName, businessGroupName, apiName, apiVersion);
 		}
 //		System.err.println("apiAsset:" + apiAsset);
+		String exchangeGroupId = (String) apiAsset.get("groupId");
 		String exchangeAssetId = (String) apiAsset.get("assetId");
 		String exchangeAssetVersion = (String) apiAsset.get("version");
 		String exchangeAssetName = (String) apiAsset.get("name");
@@ -283,7 +284,7 @@ public class ApiConfigTool {
 				exchangeAssetVersion);
 		if (apiManagerAsset == null) {
 			registerAPIInstance(client, authorizationHdr, businessGroupId, environmentId, exchangeAssetId,
-					exchangeAssetVersion, apiType, mule4OrAbove);
+					exchangeAssetVersion, apiType, mule4OrAbove, exchangeGroupId);
 			apiManagerAsset = getApiManagerAsset(client, authorizationHdr, businessGroupId, environmentId,
 					exchangeAssetId, exchangeAssetVersion);
 		}
@@ -307,7 +308,7 @@ public class ApiConfigTool {
 		String generated_client_secret = null;
 		StringBuilder applicationName = new StringBuilder();
 		applicationName.append(exchangeAssetName.toUpperCase()).append("_").append(environmentName.toUpperCase());
-		createApplication(client, authorizationHdr, myOrganizationId, applicationName.toString(), null);
+		createApplication(client, authorizationHdr, myOrganizationId, applicationName.toString(), null, autoDiscoveryApiId);
 		applications = getApplicationList(client, authorizationHdr, myOrganizationId, environmentId);
 		LinkedHashMap<String, Object> applicationInfo = null;
 		for (LinkedHashMap<String, Object> e:applications) {
@@ -583,7 +584,7 @@ public class ApiConfigTool {
 
 	@SuppressWarnings("unused")
 	private static void createApplication(Client restClient, String authorizationHdr, String organizationId,
-			String applicationName, String description) throws JsonProcessingException {
+			String applicationName, String description, String apiInstanceId) throws JsonProcessingException {
 		String desc = (description == null)
 				? "Auto generated the my_client credentials for this API instance to use calling other dependencies."
 				: description;
@@ -595,7 +596,7 @@ public class ApiConfigTool {
 		applicationValues.put("apiEndpoints", false);
 		String payload = new ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(applicationValues);
 		WebTarget target = restClient.target(HTTPS_ANYPOINT_MULESOFT_COM).path("exchange/api/v1/organizations")
-				.path(organizationId).path("applications");
+				.path(organizationId).path("applications").queryParam("apiInstanceId", apiInstanceId);
 
 //		System.out.println("createApplication: " + target.toString());
 
@@ -866,11 +867,11 @@ public class ApiConfigTool {
 
 	@SuppressWarnings("unchecked")
 	private static void registerAPIInstance(Client restClient, String authorizationHdr, String businessGroupId,
-			String environmentId, String assetId, String assetVersion, String apiType, boolean mule4OrAbove)
-			throws JsonProcessingException {
+			String environmentId, String assetId, String assetVersion, String apiType, boolean mule4OrAbove,
+			String exchangeGroupId) throws JsonProcessingException {
 		HashMap<String, Object> body = new HashMap<String, Object>();
 		LinkedHashMap<String, Object> specValues = new LinkedHashMap<String, Object>();
-		specValues.put("groupId", businessGroupId);
+		specValues.put("groupId", exchangeGroupId);
 		specValues.put("assetId", assetId);
 		specValues.put("version", assetVersion);
 		body.put("spec", specValues);
